@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">P2PDemo</string>
+    <string name="turn_server">server</string>
+    <string name="turn_port">port</string>
+    <string name="p2p_connect_user">connect user</string>
+    <string name="p2p_disconnect_user">disconnect user</string>
+    <string name="p2p_connect">connect server</string>
+    <string name="p2p_disconnect">disconnect server</string>
+    <string name="default_turn_server">120.24.76.167</string>
+    <string name="default_turn_port">34780</string>
+    <string name="p2p_user">user</string>
+    <string name="p2p_pwd">password</string>
+    <string name="p2p_remote">remote user</string>
+    <string name="p2p_remote_port">listen port</string>
+    <string name="p2p_create_proxy">create proxy</string>
+    <string name="p2p_destroy_proxy">destroy proxy</string>
+    <string name="p2p_send_file">send file</string>
+    <string name="p2p_request_dispatch">request ds</string>
+    <string name="p2p_query_dispatch">query ds</string>
+    <string name="default_ds_port">9999</string>
+    <string name="ds_port">ds port</string>
+</resources>

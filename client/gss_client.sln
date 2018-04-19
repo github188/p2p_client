@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniupnpc", "miniupnpc-1.9.20150206\msvc\miniupnpc.vcproj", "{D28CE435-CB33-4BAE-8A52-C6EF915956F5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p2pdemo", "sdk\p2pdemo\p2pdemo.vcproj", "{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gssdemo", "sdk\gssdemo\gssdemo.vcproj", "{C8F8AB25-872B-47E5-8E67-286B445725DA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjnath", "pjproject-2.3\pjnath\build\pjnath.vcproj", "{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjlib", "pjproject-2.3\pjlib\build\pjlib.vcproj", "{DA0E03ED-53A7-4050-8A85-90541C5509F8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjlib_util", "pjproject-2.3\pjlib-util\build\pjlib_util.vcproj", "{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D28CE435-CB33-4BAE-8A52-C6EF915956F5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D28CE435-CB33-4BAE-8A52-C6EF915956F5}.Debug|Win32.Build.0 = Debug|Win32
+		{D28CE435-CB33-4BAE-8A52-C6EF915956F5}.Release|Win32.ActiveCfg = Release|Win32
+		{D28CE435-CB33-4BAE-8A52-C6EF915956F5}.Release|Win32.Build.0 = Release|Win32
+		{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}.Debug|Win32.Build.0 = Debug|Win32
+		{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}.Release|Win32.ActiveCfg = Release|Win32
+		{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}.Release|Win32.Build.0 = Release|Win32
+		{C8F8AB25-872B-47E5-8E67-286B445725DA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C8F8AB25-872B-47E5-8E67-286B445725DA}.Debug|Win32.Build.0 = Debug|Win32
+		{C8F8AB25-872B-47E5-8E67-286B445725DA}.Release|Win32.ActiveCfg = Release|Win32
+		{C8F8AB25-872B-47E5-8E67-286B445725DA}.Release|Win32.Build.0 = Release|Win32
+		{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}.Debug|Win32.Build.0 = Debug|Win32
+		{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}.Release|Win32.ActiveCfg = Release|Win32
+		{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}.Release|Win32.Build.0 = Release|Win32
+		{DA0E03ED-53A7-4050-8A85-90541C5509F8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DA0E03ED-53A7-4050-8A85-90541C5509F8}.Debug|Win32.Build.0 = Debug|Win32
+		{DA0E03ED-53A7-4050-8A85-90541C5509F8}.Release|Win32.ActiveCfg = Release|Win32
+		{DA0E03ED-53A7-4050-8A85-90541C5509F8}.Release|Win32.Build.0 = Release|Win32
+		{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}.Debug|Win32.Build.0 = Debug|Win32
+		{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}.Release|Win32.ActiveCfg = Release|Win32
+		{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

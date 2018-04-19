@@ -1,0 +1,25 @@
+CFLAGS = -O3 -I../include -I../../../common -Ih264
+LLDFLAGS = p2p.a libuuid_arm.a -lm -lrt -lpthread
+CC=arm-hisiv300-linux-gcc
+
+.SUFFIXES: .o .cpp .cxx .c
+OBJS = gssdemo.o av_conn.o live_conn.o signaling_conn.o ./h264/h264_reader.o ../../../common/tm.o ../p2pdemo/getopt.o
+	
+all: gssdemo
+
+gssdemo: $(OBJS)
+	$(CC) -o gssdemo $(OBJS) $(LLDFLAGS) -o $@
+    
+.cpp.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+       
+.cxx.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+clean:
+	rm -f *.o
+	rm -f h264/*.o
+	rm gssdemo

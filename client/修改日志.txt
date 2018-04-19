@@ -1,0 +1,26 @@
+1.0.0.0 2017/8/25
+旧的p2p库
+
+1.1.0.0 2017/10/25
+增加gss客户端，
+
+增加p2p_set_global_opt接口
+
+修改了p2p_transport_send，非阻塞模式发送
+
+
+1.1.5.0 2017/11/7
+修改android和ios编译工程
+
+修改p2p_dispatch.c,增加SO_LINGER选项
+
+修改h264_reader.c,发送时间戳累积延时
+
+增加客户端arm编译脚本和makefile
+
+增加元海智联tcp转发SDK编程指南.docx
+
+1.2.0.0
+增加p2p_set_global_opt P2P_ENABLE_RELAY,P2P_ONLY_RELAY选项
+修改p2p_tcp_send 防止在转发的情况下，多线程死锁,修改缓存区256个数据包，修改心跳时间为1秒
+修改on_tcp_proxy_connected回调函数，增加user_data参数
