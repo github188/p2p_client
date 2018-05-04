@@ -108,7 +108,7 @@ typedef struct pj_ice_strans_p2p_conn
 	unsigned int user_data_capacity; //command cache capacity
 	pj_uint16_t user_data_pkg_seq; //current command sequence number
 
-	pj_int32_t conn_flag; //to see conn_flag in 
+	pj_int32_t conn_flag; //to see conn_flag in on_connection_disconnect
 
 	/*smooth receive data*/
 	p2p_smooth* smooth;
@@ -124,6 +124,9 @@ typedef struct pj_ice_strans_p2p_conn
 	p2p_tcp_data* pause_recv_first;
 	p2p_tcp_data* pause_recv_last;
 	pj_uint32_t pause_recv_count;
+
+	//default PJ_FALSE, p2p_transport_disconnect set disconnect_req = PJ_TRUE
+	pj_bool_t disconnect_req;
 
 }pj_ice_strans_p2p_conn;
 

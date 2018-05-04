@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.4.226"
+#define P2P_VERSION "1.4.227"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -351,7 +351,10 @@ static void on_ice_data_keep_alive(pj_ice_strans *ice_st,
 		//wake up block send
 		p2p_conn_wakeup_block_send(conn);
 
-		if( conn->transport->cb && conn->transport->cb->on_connection_disconnect)
+		//if user had called p2p_transport_disconnect, do not call on_connection_disconnect
+		if( !conn->disconnect_req 
+			&& conn->transport->cb 
+			&& conn->transport->cb->on_connection_disconnect)
 		{
 				(*conn->transport->cb->on_connection_disconnect)(conn->transport,
 					conn->conn_id, 
@@ -1392,6 +1395,8 @@ P2P_DECL(void) p2p_transport_disconnect(p2p_transport *transport, int connection
 {
 	pj_time_val delay = {0, 0};
 	p2p_disconnection_id* item;
+	pj_uint32_t hval=0;
+	pj_ice_strans_p2p_conn* conn;
 
 	if(transport == 0 || !transport->connected)
 		return;
@@ -1404,10 +1409,21 @@ P2P_DECL(void) p2p_transport_disconnect(p2p_transport *transport, int connection
 	item->conn_id = connection_id;
 
 	pj_grp_lock_acquire(transport->grp_lock);
-	pj_list_push_back(&transport->disconnect_conns, item);
-	pj_timer_heap_schedule_w_grp_lock(get_p2p_global()->timer_heap, &transport->timer,
-		&delay, P2P_DISCONNECT_CONNECTION,
-		transport->grp_lock);
+
+	conn  = pj_hash_get(transport->conn_hash_table, &connection_id, sizeof(pj_int32_t), &hval);
+	if(conn && !conn->destroy_req)
+	{
+		if(!conn->disconnect_req)
+		{
+			conn->disconnect_req = PJ_TRUE;
+
+			pj_list_push_back(&transport->disconnect_conns, item);
+			pj_timer_heap_schedule_w_grp_lock(get_p2p_global()->timer_heap, &transport->timer,
+				&delay, P2P_DISCONNECT_CONNECTION,
+				transport->grp_lock);
+		}
+	}
+	
 	pj_grp_lock_release(transport->grp_lock);
 
 }

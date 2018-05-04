@@ -735,6 +735,11 @@ void p2p_conn_pause_send(void* user_data, pj_bool_t pause)
 static void p2p_conn_clear_recv_buf(void* data)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)data;
+	if(conn->destroy_req)
+	{
+		pj_grp_lock_dec_ref(conn->grp_lock); //add in p2p_conn_set_opt P2P_RESET_BUF
+		return;
+	}
 
 	pj_grp_lock_acquire(conn->grp_lock);
 

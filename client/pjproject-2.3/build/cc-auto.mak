@@ -1,10 +1,10 @@
-export CC = arm-hisiv300-linux-gcc -c
-export CXX = arm-hisiv300-linux-g++ -c
-export AR = arm-hisiv300-linux-ar
+export CC = gcc -c
+export CXX = g++ -c
+export AR = ar
 export AR_FLAGS = rv
-export LD = arm-hisiv300-linux-gcc
+export LD = gcc
 export LDOUT = -o 
-export RANLIB = arm-hisiv300-linux-ranlib
+export RANLIB = ranlib
 
 export OBJEXT := .o
 export LIBEXT := .a

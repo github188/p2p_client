@@ -42,6 +42,7 @@ struct sockaddr;
 
 #pragma pack()
 
+#pragma pack(4) //for 64 bit system(ios..), 8 byte align, 
 	typedef struct p2p_tcp_snd_data
 	{
 		pj_uint8_t send_times;
@@ -53,6 +54,7 @@ struct sockaddr;
 		pj_uint32_t pkg_index;
 		p2p_tcp_header header;		
 	}p2p_tcp_snd_data;
+#pragma pack()
 
 	typedef struct p2p_tcp_recved_data
 	{
