@@ -1,0 +1,20 @@
+#ifndef __DEV_PULL_CONN_H__
+#define __DEV_PULL_CONN_H__
+
+#include "gss_protocol.h"
+#include <event2/event.h>
+
+struct dev_push_conn;
+struct client_pull_conn;
+
+void on_dev_push_connect(void* tcp_client, GSS_DATA_HEADER* cmd_header);
+
+void dev_push_conn_pull_closed(struct dev_push_conn* push_conn, struct client_pull_conn* pull_conn);
+
+int dev_push_conn_pull_connect(char* uid, struct client_pull_conn* pull_conn); 
+
+void on_rtmp_push_event(evutil_socket_t fd, short events, void *arg);
+
+void get_dev_push_count(unsigned int* push_count, unsigned int* pull_count);
+
+#endif

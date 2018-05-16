@@ -1,0 +1,345 @@
+// p2pdemo.cpp : Defines the entry point for the console application.
+//
+#include <event2/event.h>
+#ifdef WIN32
+#include "get_opt.h"
+#include <Windows.h>
+#include <Iphlpapi.h>
+#else
+#include<unistd.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+#include <net/if.h> 
+#endif
+#include <time.h>
+#include "log.h"
+#include "path.h"
+#include "gss_setting.h"
+#include "tcp_listener.h"
+#include "tcp_client.h"
+#include "unknown_tcp.h"
+#include "gss_protocol.h"
+#include "client_av_conn.h"
+#include "shared_cmd.h"
+#include "disp_client.h"
+#include "dev_main_conn.h"
+#include "dev_push_conn.h"
+#include "async_db.h"
+#include "flow_stat.h"
+
+struct event_base* g_ev_base = NULL;
+void* g_listener = NULL;
+time_t g_now_time = 0; //now time, in second
+
+struct flow_stat g_recv_flow_stat; //statistics receive net flow stat
+
+struct flow_stat g_send_flow_stat; //statistics send net flow stat
+
+//libevent common timer
+#define PREDEF_TIMERS_NUM (6)
+const int predef_timer_intervals[PREDEF_TIMERS_NUM] = {5, 10, 20, GSS_HEART_SPAN, 60, 120}; 
+
+#define GSS_VER "1.0.0.0"
+
+static void gss_flow_stat()
+{
+	static int times = 0;
+	times++;
+	flow_stat_calc(&g_recv_flow_stat);
+	flow_stat_calc(&g_send_flow_stat);
+
+	if(times == FLOW_STAT_PREV_COUNT)
+	{
+		LOG(LOG_LEVEL_PROMPT, "flow statistics receive %lld Byte, send %lld Byte", flow_stat_get(&g_recv_flow_stat), flow_stat_get(&g_send_flow_stat));
+		times = 0;
+	}
+}
+
+//one second timer
+static void now_timer(evutil_socket_t fd, short events, void *arg)
+{	
+	time(&g_now_time);
+
+	gss_flow_stat();
+}
+
+//to see libevent common timer
+static void init_common_timer()
+{
+	int t;
+	for(t=0;t<PREDEF_TIMERS_NUM;++t) 
+	{
+		struct timeval duration;
+		duration.tv_sec = predef_timer_intervals[t];
+		duration.tv_usec = 0;
+		event_base_init_common_timeout(g_ev_base, &duration);
+	}
+}
+
+static int parse_arg(int argc, char *argv[])
+{
+	int c;
+	while((c = getopt(argc,argv,"L:P:i:l:s"))!= -1)
+	{
+		switch (c) 
+		{
+		case 'L':
+			{
+				if(strlen(optarg) < sizeof(get_gss_setting()->listen_ip))
+					strcpy(get_gss_setting()->listen_ip, optarg); 
+				else
+				{
+					LOG(LOG_LEVEL_ERROR, "listen ip argument is invalid."); 
+					return -1;
+				}
+				break;
+			}
+		case 'P':
+			get_gss_setting()->listen_port = atoi(optarg);
+			if(get_gss_setting()->listen_port<=0 || get_gss_setting()->listen_port>65535)
+			{
+				LOG(LOG_LEVEL_ERROR, "listen port argument is invalid."); 
+				return -1;
+			}
+			break;
+		case 's':
+			if(load_gss_setting(optarg))
+			{
+				LOG(LOG_LEVEL_ERROR, "failed to load ini %s file", optarg);
+				return -1;
+			}
+			break;
+		case 'l':
+			if(strlen(optarg) < sizeof(get_gss_setting()->log_file_name))
+			{
+				strcpy(get_gss_setting()->log_file_name, optarg); 
+				set_log_file_name(optarg);
+			}
+			else
+			{
+				LOG(LOG_LEVEL_ERROR, "log file path argument is invalid."); 
+				return -1;
+			}
+			break;
+		case 'i':
+			get_gss_setting()->server_id = atoi(optarg);
+			break;
+		default:
+			LOG(LOG_LEVEL_ERROR, "argument is invalid."); 
+			return -1;
+		}
+	}
+	return 0;
+}
+
+void send_disp_info(void* tcp_client)
+{
+#define DISPATCH_CMD_LEN (sizeof(GSS_DATA_HEADER) + sizeof(GSS_DISPATCH_CMD))
+	char buf[DISPATCH_CMD_LEN];
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+	GSS_DISPATCH_CMD* disp = (GSS_DISPATCH_CMD*)(header+1);
+
+	header->cmd = GSS_DISPATCH;
+	header->data_seq = LAST_DATA_SEQ;
+	header->len = htons(sizeof(GSS_DISPATCH_CMD));
+
+	if(get_gss_setting()->external_ip[0])
+		strcpy(disp->addr, get_gss_setting()->external_ip);
+	else
+		strcpy(disp->addr, get_gss_setting()->listen_ip);
+	disp->port = htonl(get_gss_setting()->listen_port);
+
+	get_main_conn_count(&disp->main_count, &disp->signaling_count);
+	get_av_conn_count(&disp->av_count);
+	get_dev_push_count(&disp->push_count, &disp->pull_count);
+
+	disp->id = htonl(get_gss_setting()->server_id);
+	disp->main_count = htonl(disp->main_count);
+	disp->signaling_count = htonl(disp->signaling_count);
+	disp->av_count = htonl(disp->av_count);
+	disp->push_count = htonl(disp->push_count);
+	disp->pull_count = htonl(disp->pull_count);
+
+	tcp_client_send(tcp_client, buf, DISPATCH_CMD_LEN);
+}
+
+#ifdef _WIN32
+static void get_listen_ip(void)
+{
+	MIB_IPADDRTABLE *pIPAddrTable;
+	DWORD dwSize = 0;
+	DWORD dwRetVal;
+	int i;
+
+	pIPAddrTable = (MIB_IPADDRTABLE*) malloc( sizeof(MIB_IPADDRTABLE) );
+
+	if (GetIpAddrTable(pIPAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
+	{
+		free( pIPAddrTable );
+		pIPAddrTable = (MIB_IPADDRTABLE *) malloc ( dwSize );
+	}
+
+	if ( (dwRetVal = GetIpAddrTable( pIPAddrTable, &dwSize, 0 )) != NO_ERROR )
+	{ 
+		printf("GetIpAddrTable call failed with %d/n", dwRetVal);
+		return;
+	}
+	
+	for (i=0; i < (int) pIPAddrTable->dwNumEntries; i++) 
+	{
+		struct in_addr addr;
+		char* ip;
+		addr.s_addr = pIPAddrTable->table[i].dwAddr;
+		ip = inet_ntoa(addr);
+		strcpy(get_gss_setting()->listen_ip, ip) ;
+		LOG(LOG_LEVEL_INFO, "get_listen_ip %s", ip);
+		break;
+	}
+
+	if (pIPAddrTable)
+		free(pIPAddrTable);
+}
+#else
+
+static void get_listen_ip(void)
+{
+	struct ifaddrs * ifs = NULL;
+	struct ifaddrs * ifa = NULL;
+
+	char saddr[INET6_ADDRSTRLEN] = "";
+
+	if((getifaddrs(&ifs) == 0) && ifs) {
+
+		for (ifa = ifs; ifa != NULL; ifa = ifa->ifa_next) {
+
+			if(!(ifa->ifa_flags & IFF_UP))
+				continue;
+
+			if(!(ifa->ifa_addr))
+				continue;
+
+			if (ifa ->ifa_addr->sa_family == AF_INET) {
+				if(!inet_ntop(AF_INET, &((struct sockaddr_in *) ifa->ifa_addr)->sin_addr, saddr,
+					INET_ADDRSTRLEN))
+					continue;
+				if(strstr(saddr,"169.254.") == saddr)
+					continue;
+				if(!strcmp(saddr,"0.0.0.0"))
+					continue;
+			} else if (ifa->ifa_addr->sa_family == AF_INET6) {
+				if(!inet_ntop(AF_INET6, &((struct sockaddr_in6 *) ifa->ifa_addr)->sin6_addr, saddr,
+					INET6_ADDRSTRLEN))
+					continue;
+				if(strstr(saddr,"fe80") == saddr)
+					continue;
+				if(!strcmp(saddr,"::"))
+					continue;
+			} else {
+				continue;
+			}
+		
+			if(!(ifa->ifa_flags & IFF_LOOPBACK))
+			{
+				strcpy(get_gss_setting()->listen_ip, saddr) ;
+				LOG(LOG_LEVEL_INFO, "get_listen_ip %s", saddr);
+				break;
+			}
+				
+		}
+		freeifaddrs(ifs);
+	}
+}
+#endif
+
+int main(int argc, char *argv[])
+{
+	char file_name[MAX_PATH];
+	struct event* now_ev = NULL;
+	struct timeval tv = {1, 0}; 
+#ifdef WIN32
+	WSADATA wsa_data;
+	WSAStartup(0x0201, &wsa_data);
+#else
+	signal(SIGPIPE, SIG_IGN); //gdb handle SIGPIPE nostop noprint
+#endif
+
+	LOG(LOG_LEVEL_PROMPT, "gss version:%s", GSS_VER);
+
+	do 
+	{
+		int result;
+
+		//load setting, default ini setting in exe path
+		sprintf(file_name, "%s/gss.ini", get_exe_path());
+		if(load_gss_setting(file_name))
+		{
+			LOG(LOG_LEVEL_ERROR, "failed to load ini %s file", file_name);
+			break;
+		}
+
+		if(parse_arg(argc, argv))
+			break;
+
+		async_db_init();
+
+		shared_cmd_startup();
+
+		flow_stat_init(&g_recv_flow_stat);
+		flow_stat_init(&g_send_flow_stat);
+	
+		//create libevent base
+		g_ev_base = event_base_new();
+		LOG(LOG_LEVEL_INFO, "libevent version %s method %s", event_get_version(), event_base_get_method(g_ev_base));
+
+		init_common_timer();
+
+		client_av_conn_entries_init();
+	
+		//create one second timer
+		time(&g_now_time);
+		now_ev = event_new(g_ev_base, -1, EV_TIMEOUT|EV_PERSIST, now_timer , NULL);
+		evtimer_add(now_ev, &tv);
+
+		init_unknown_tcp();
+
+		//start tcp listen 
+		g_listener = create_tcp_listener(get_gss_setting()->listen_ip, get_gss_setting()->listen_port, on_tcp_accept, g_ev_base, NULL);
+		result = tcp_listener_listen(g_listener);
+		if(result !=0 )
+			break;
+		if(get_gss_setting()->external_ip[0] == '\0' && get_gss_setting()->listen_ip[0] == '\0')
+			get_listen_ip();
+
+		result = start_disp_client(g_ev_base, send_disp_info, reload_disp_svr_info);
+		if(result !=0 )
+			break;
+
+		event_base_dispatch(g_ev_base);
+	} while (0);
+	
+	stop_disp_client();
+
+	if(g_listener)
+		destroy_tcp_listener(g_listener);
+
+	uninit_unknown_tcp();
+
+	client_av_conn_entries_uninit();
+
+	if(now_ev)
+		event_free(now_ev);
+
+	if(g_ev_base)
+		event_base_free(g_ev_base);
+
+	async_db_uninit();
+
+	shared_cmd_clean();
+
+#ifdef WIN32
+	WSACleanup();
+#endif
+
+}

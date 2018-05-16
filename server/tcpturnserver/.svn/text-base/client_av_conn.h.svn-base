@@ -1,0 +1,34 @@
+#ifndef CLIENT_AV_CONN_H_
+#define CLIENT_AV_CONN_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include "gss_protocol.h"
+
+
+struct client_av_conn;
+struct dev_av_conn;
+
+void client_av_conn_entries_init();
+
+void client_av_conn_entries_uninit();
+
+void on_client_av_connect(void* tcp_client, GSS_DATA_HEADER* cmd_header);
+
+void client_av_conn_send(struct client_av_conn* av_conn, const char* buf, int buf_len);
+
+void client_av_conn_dev_closed(struct client_av_conn* av_conn);
+
+int client_av_conn_dev_connected(const char* uid, unsigned int client_idx, struct dev_av_conn* dev_conn, struct client_av_conn** client_conn);
+
+void get_av_conn_count(unsigned int* av_count);
+
+#ifdef __cplusplus
+}; //end of extern "C" {
+#endif
+
+#endif //end of CLIENT_AV_CONN_H_
+

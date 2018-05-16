@@ -1,0 +1,26 @@
+#ifndef __RTMP_PUSHER__
+#define __RTMP_PUSHER__
+
+struct rtmp_pusher;
+struct dev_push_conn;
+
+#include "gss_protocol.h"
+
+#define RTMP_CONNECT_SUCCESS (0)
+#define RTMP_CONNECT_FAIL (1)
+#define RTMP_DISCONNECT (2)
+
+typedef struct async_rtmp_notice
+{
+	unsigned uid_hash_val;
+	struct dev_push_conn* push_conn;
+	char uid[MAX_UID_LEN];
+	int event;
+	int err_code;
+}async_rtmp_notice;
+
+struct rtmp_pusher* create_rtmp_pusher(const char* uid, unsigned uid_hash_val, struct dev_push_conn* push_conn, GSS_DATA_HEADER* header, int data_len);
+void destory_rtmp_pusher(struct rtmp_pusher* pusher);
+void rtmp_pusher_on_data(struct rtmp_pusher* pusher, struct shared_cmd* sc, char is_key_video);
+
+#endif

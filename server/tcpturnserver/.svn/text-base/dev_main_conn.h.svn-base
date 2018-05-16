@@ -1,0 +1,31 @@
+#ifndef DEV_MAIN_CONN_H_
+#define DEV_MAIN_CONN_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+
+#endif
+
+#include "gss_protocol.h"
+
+struct dev_main_conn;
+
+void on_dev_connect(void* tcp_client, GSS_DATA_HEADER* cmd_header); 
+
+int main_conn_signaling_connect(const char* uid, void* client_conn, struct dev_main_conn** main_conn, unsigned short* client_idx); 
+
+void main_conn_signaling_close(struct dev_main_conn* main_conn, void* client_conn, unsigned short client_idx); 
+
+void dev_main_conn_send(struct dev_main_conn* main_conn, const char* buf, int buf_len);
+
+int main_conn_av_connect(const char* uid, unsigned int conn_idx); 
+
+void get_main_conn_count(unsigned int* main_count, unsigned int* signaling_count);
+
+#ifdef __cplusplus
+}; //end of extern "C" {
+#endif
+
+#endif //end of DEV_MAIN_CONN_H_
+

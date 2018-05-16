@@ -1,0 +1,73 @@
+[common]
+;server id
+server_id=10001
+
+;global public IP, e.g. public ip of aws 
+external_ip=
+
+;listen ip, if empty than listen all host ip
+listen_ip=
+
+;listen port
+listen_port=6000
+
+;log file path,if empty than exe path/gss.log
+log_file=
+
+;min log level
+;#define LOG_LEVEL_FATAL 7
+;#define LOG_LEVEL_ERROR 6
+;#define LOG_LEVEL_WARN  5
+;#define LOG_LEVEL_PROMPT 4
+;#define LOG_LEVEL_INFO  3
+;#define LOG_LEVEL_DEBUG 2
+;#define LOG_LEVEL_TRACE 1
+log_level=0
+
+
+;tcp connection no receive data timeout
+unknown_tcp_timeout=5
+
+;max accept tcp count in one second
+accept_period_limit=1000
+
+;max audio and video forward connection count
+max_av_conn_count=2048
+
+;enable gop cache
+enable_gop_cache=1
+
+;the MR(merged-write) time in ms
+mw_time=350
+
+;max push audio and video rate, kbps
+max_push_bitrate=6000
+
+;device av connection or push connection socket SO_RCVBUF size in byte
+;if so_recvbuf less or eq 0, so_recvbuf is ignored
+so_recvbuf=-1
+
+[db]
+;asynchronous database thread count
+async_db_thread_count=64
+;database count
+count=1
+
+[db1]
+;database host
+host=192.168.15.88
+;database user
+user=root
+;database password
+password=123456
+;database name
+dbname=remoteapp
+;database port
+port=3306
+
+[dispatch]
+count=1
+addr_1=192.168.15.88
+port_1=6001
+
+

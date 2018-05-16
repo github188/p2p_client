@@ -1,0 +1,490 @@
+0: log file opened: /var/log/turn_18368_2018-03-01.log
+0: 
+RFC 3489/5389/5766/5780/6062/6156 STUN/TURN Server
+Version Citrix-3.2.5.2 'Marshal West'
+0: 
+Max number of open files/sockets allowed for this process: 102400
+0: 
+Due to the open files/sockets limitation,
+max supported number of TURN Sessions possible is: 51000 (approximately)
+0: 
+
+==== Show him the instruments, Practical Frost: ====
+
+0: TLS supported
+0: DTLS supported
+0: Redis is not supported
+0: PostgreSQL is not supported
+0: MySQL supported
+0: OpenSSL compile-time version 0x1000105f: fresh enough
+0: Default Net Engine version: 3 (UDP thread per CPU core)
+
+=====================================================
+
+0: Config file found: /usr/local/etc/turnserver.conf
+0: Config file found: /usr/local/etc/turnserver.conf
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: WARNING: cannot find certificate file: turn_server_cert.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because certificate file is not set properly
+0: WARNING: cannot find private key file: turn_server_pkey.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because private key file is not set properly
+0: NO EXPLICIT LISTENER ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering listener addresses: =========
+0: Listener address to use: 127.0.0.1
+0: Listener address to use: 10.27.166.149
+0: Listener address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 'real' addresses discovered
+0: =====================================================
+0: NO EXPLICIT RELAY ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering relay addresses: =============
+0: Relay address to use: 10.27.166.149
+0: Relay address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 relay addresses discovered
+0: =====================================================
+0: pid file created: /var/run/turnserver.pid
+0: ******p2p version 1.1.0.0******
+0: init user password map begin
+0: init user password map end
+0: IO method (main listener thread): epoll (with changelist)
+0: Wait for relay ports initialization...
+0:   relay 10.27.166.149 initialization...
+0:   relay 10.27.166.149 initialization done
+0:   relay 119.23.128.209 initialization...
+0:   relay 119.23.128.209 initialization done
+0: Relay ports initialization done
+0: IO method (general relay thread): epoll (with changelist)
+0: turn server id=0 created
+0: Total UDP servers: 0
+0: Total General servers: 1
+0: IO method (auth thread): epoll (with changelist)
+0: IO method (cli thread): epoll (with changelist)
+0: p2p_assist_relay_socket 0x7f47cc028580
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+3: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+4: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+5: MySQL DB co0: log file opened: /var/log/turn_19268_2018-03-01.log
+0: 
+RFC 3489/5389/5766/5780/6062/6156 STUN/TURN Server
+Version Citrix-3.2.5.2 'Marshal West'
+0: 
+Max number of open files/sockets allowed for this process: 102400
+0: 
+Due to the open files/sockets limitation,
+max supported number of TURN Sessions possible is: 51000 (approximately)
+0: 
+
+==== Show him the instruments, Practical Frost: ====
+
+0: TLS supported
+0: DTLS supported
+0: Redis is not supported
+0: PostgreSQL is not supported
+0: MySQL supported
+0: OpenSSL compile-time version 0x1000105f: fresh enough
+0: Default Net Engine version: 3 (UDP thread per CPU core)
+
+=====================================================
+
+0: Config file found: /usr/local/etc/turnserver.conf
+0: Config file found: /usr/local/etc/turnserver.conf
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: WARNING: cannot find certificate file: turn_server_cert.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because certificate file is not set properly
+0: WARNING: cannot find private key file: turn_server_pkey.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because private key file is not set properly
+0: NO EXPLICIT LISTENER ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering listener addresses: =========
+0: Listener address to use: 127.0.0.1
+0: Listener address to use: 10.27.166.149
+0: Listener address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 'real' addresses discovered
+0: =====================================================
+0: NO EXPLICIT RELAY ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering relay addresses: =============
+0: Relay address to use: 10.27.166.149
+0: Relay address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 relay addresses discovered
+0: =====================================================
+0: pid file created: /var/run/turnserver.pid
+0: ******p2p version 1.1.0.0******
+0: init user password map begin
+0: init user password map end
+0: IO method (main listener thread): epoll (with changelist)
+0: WARNING: I cannot support STUN CHANGE_REQUEST functionality because only one IP address is provided
+0: Wait for relay ports initialization...
+0:   relay 10.27.166.149 initialization...
+0:   relay 10.27.166.149 initialization done
+0:   relay 119.23.128.209 initialization...
+0:   relay 119.23.128.209 initialization done
+0: Relay ports initialization done
+0: IO method (general relay thread): epoll (with changelist)
+0: turn server id=0 created
+0: Total UDP servers: 0
+0: Total General servers: 1
+0: IO method (auth thread): epoll (with changelist)
+0: IO method (cli thread): epoll (with changelist)
+2: p2p_assist_relay_socket 0x7fd1a40322c0
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+3: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+3: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+8: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+9: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+11: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+12: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+13: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+14: MySQL DB connection success: h0: log file opened: /var/log/turn_28901_2018-03-09.log
+0: 
+RFC 3489/5389/5766/5780/6062/6156 STUN/TURN Server
+Version Citrix-3.2.5.2 'Marshal West'
+0: 
+Max number of open files/sockets allowed for this process: 102400
+0: 
+Due to the open files/sockets limitation,
+max supported number of TURN Sessions possible is: 51000 (approximately)
+0: 
+
+==== Show him the instruments, Practical Frost: ====
+
+0: TLS supported
+0: DTLS supported
+0: Redis is not supported
+0: PostgreSQL is not supported
+0: MySQL supported
+0: OpenSSL compile-time version 0x1000105f: fresh enough
+0: Default Net Engine version: 3 (UDP thread per CPU core)
+
+=====================================================
+
+0: Config file found: /usr/local/etc/turnserver.conf
+0: Config file found: /usr/local/etc/turnserver.conf
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: WARNING: cannot find certificate file: turn_server_cert.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because certificate file is not set properly
+0: WARNING: cannot find private key file: turn_server_pkey.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because private key file is not set properly
+0: NO EXPLICIT LISTENER ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering listener addresses: =========
+0: Listener address to use: 127.0.0.1
+0: Listener address to use: 10.27.166.149
+0: Listener address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 'real' addresses discovered
+0: =====================================================
+0: NO EXPLICIT RELAY ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering relay addresses: =============
+0: Relay address to use: 10.27.166.149
+0: Relay address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 relay addresses discovered
+0: =====================================================
+0: pid file created: /var/run/turnserver.pid
+0: ******p2p version 1.1.0.0******
+0: init user password map begin
+0: init user password map end
+0: IO method (main listener thread): epoll (with changelist)
+0: WARNING: I cannot support STUN CHANGE_REQUEST functionality because only one IP address is provided
+0: Wait for relay ports initialization...
+0:   relay 10.27.166.149 initialization...
+0:   relay 10.27.166.149 initialization done
+0:   relay 119.23.128.209 initialization...
+0:   relay 119.23.128.209 initialization done
+0: Relay ports initialization done
+0: IO method (general relay thread): epoll (with changelist)
+0: turn server id=0 created
+0: Total UDP servers: 0
+0: Total General servers: 1
+0: IO method (auth thread): epoll (with changelist)
+0: IO method (cli thread): epoll (with changelist)
+0: p2p_assist_relay_socket 0x7f0b6c02d2a0
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+3: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+4: MySQL DB connection success: host=0: log file opened: /var/log/turn_11618_2018-03-28.log
+0: 
+RFC 3489/5389/5766/5780/6062/6156 STUN/TURN Server
+Version Citrix-3.2.5.2 'Marshal West'
+0: 
+Max number of open files/sockets allowed for this process: 102400
+0: 
+Due to the open files/sockets limitation,
+max supported number of TURN Sessions possible is: 51000 (approximately)
+0: 
+
+==== Show him the instruments, Practical Frost: ====
+
+0: TLS supported
+0: DTLS supported
+0: Redis is not supported
+0: PostgreSQL is not supported
+0: MySQL supported
+0: OpenSSL compile-time version 0x1000105f: fresh enough
+0: Default Net Engine version: 3 (UDP thread per CPU core)
+
+=====================================================
+
+0: Config file found: /usr/local/etc/turnserver.conf
+0: Config file found: /usr/local/etc/turnserver.conf
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: WARNING: cannot find certificate file: turn_server_cert.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because certificate file is not set properly
+0: WARNING: cannot find private key file: turn_server_pkey.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because private key file is not set properly
+0: NO EXPLICIT LISTENER ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering listener addresses: =========
+0: Listener address to use: 127.0.0.1
+0: Listener address to use: 10.27.166.149
+0: Listener address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 'real' addresses discovered
+0: =====================================================
+0: NO EXPLICIT RELAY ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering relay addresses: =============
+0: Relay address to use: 10.27.166.149
+0: Relay address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 relay addresses discovered
+0: =====================================================
+0: pid file created: /var/run/turnserver.pid
+0: ******p2p version 1.1.0.0******
+0: init user password map begin
+0: init user password map end
+0: IO method (main listener thread): epoll (with changelist)
+0: WARNING: I cannot support STUN CHANGE_REQUEST functionality because only one IP address is provided
+0: Wait for relay ports initialization...
+0:   relay 10.27.166.149 initialization...
+0:   relay 10.27.166.149 initialization done
+0:   relay 119.23.128.209 initialization...
+0:   relay 119.23.128.209 initialization done
+0: Relay ports initialization done
+0: IO method (general relay thread): epoll (with changelist)
+0: turn server id=0 created
+0: Total UDP servers: 0
+0: Total General servers: 1
+0: IO method (auth thread): epoll (with changelist)
+0: IO method (cli thread): epoll (with changelist)
+0: p2p_assist_relay_socket 0x7f179c02d260
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=0: log file opened: /var/log/turn_14172_2018-03-28.log
+0: 
+RFC 3489/5389/5766/5780/6062/6156 STUN/TURN Server
+Version Citrix-3.2.5.2 'Marshal West'
+0: 
+Max number of open files/sockets allowed for this process: 102400
+0: 
+Due to the open files/sockets limitation,
+max supported number of TURN Sessions possible is: 51000 (approximately)
+0: 
+
+==== Show him the instruments, Practical Frost: ====
+
+0: TLS supported
+0: DTLS supported
+0: Redis is not supported
+0: PostgreSQL is not supported
+0: MySQL supported
+0: OpenSSL compile-time version 0x1000105f: fresh enough
+0: Default Net Engine version: 3 (UDP thread per CPU core)
+
+=====================================================
+
+0: Config file found: /usr/local/etc/turnserver.conf
+0: Config file found: /usr/local/etc/turnserver.conf
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: WARNING: cannot find certificate file: turn_server_cert.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because certificate file is not set properly
+0: WARNING: cannot find private key file: turn_server_pkey.pem (1)
+0: WARNING: cannot start TLS and DTLS listeners because private key file is not set properly
+0: NO EXPLICIT LISTENER ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering listener addresses: =========
+0: Listener address to use: 127.0.0.1
+0: Listener address to use: 10.27.166.149
+0: Listener address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 'real' addresses discovered
+0: =====================================================
+0: NO EXPLICIT RELAY ADDRESS(ES) ARE CONFIGURED
+0: ===========Discovering relay addresses: =============
+0: Relay address to use: 10.27.166.149
+0: Relay address to use: 119.23.128.209
+0: =====================================================
+0: Total: 2 relay addresses discovered
+0: =====================================================
+0: pid file created: /var/run/turnserver.pid
+0: ******p2p version 1.1.0.0******
+0: init user password map begin
+0: init user password map end
+0: IO method (main listener thread): epoll (with changelist)
+0: WARNING: I cannot support STUN CHANGE_REQUEST functionality because only one IP address is provided
+0: Wait for relay ports initialization...
+0:   relay 10.27.166.149 initialization...
+0:   relay 10.27.166.149 initialization done
+0:   relay 119.23.128.209 initialization...
+0:   relay 119.23.128.209 initialization done
+0: Relay ports initialization done
+0: IO method (general relay thread): epoll (with changelist)
+0: turn server id=0 created
+0: Total UDP servers: 0
+0: Total General servers: 1
+0: IO method (auth thread): epoll (with changelist)
+0: IO method (cli thread): epoll (with changelist)
+0: p2p_assist_relay_socket 0x7f0c9c02d2a0
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+0: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+1: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+2: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+3: MySQL DB connection success: host=127.0.0.1 dbname=remoteapp user=ulife password=goscam66%%DB port=3306 connect_timeout=30
+3: MySQL DB connection success: host=[1;37m18-04-19 10:07:07:573:[tcpturnserver.c,282]:9422:PROMPT:gss version:1.0.1.0
+[0m[0m18-04-19 10:07:07:600:[async_db.c,91]:9423:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:604:[async_db.c,91]:9424:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:607:[async_db.c,91]:9425:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:611:[async_db.c,91]:9426:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:614:[async_db.c,91]:9427:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:617:[async_db.c,91]:9428:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:618:[tcpturnserver.c,308]:9422:INFO:libevent version 2.0.22-stable method epoll
+[0m[1;37m18-04-19 10:07:07:619:[../common/tcp_listener.c,108]:9422:PROMPT:listen ok, socket 11, ip:119.23.128.209,port:6000
+[0m[0m18-04-19 10:07:07:619:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13db790 fd 6 error 0
+[0m[0m18-04-19 10:07:07:619:[async_db.c,91]:9430:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:620:[async_db.c,91]:9432:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:621:[async_db.c,91]:9431:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:622:[async_db.c,91]:9433:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:623:[async_db.c,91]:9434:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:624:[async_db.c,91]:9435:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:625:[async_db.c,91]:9436:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:625:[async_db.c,91]:9437:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:626:[async_db.c,91]:9438:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:627:[async_db.c,91]:9439:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:628:[async_db.c,91]:9440:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:629:[async_db.c,91]:9441:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:629:[async_db.c,91]:9442:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:630:[async_db.c,91]:9443:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:631:[async_db.c,91]:9444:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:632:[async_db.c,91]:9445:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:633:[async_db.c,91]:9446:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:633:[async_db.c,91]:9447:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:646:[async_db.c,91]:9448:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:646:[async_db.c,91]:9449:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:647:[async_db.c,91]:9450:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:648:[async_db.c,91]:9451:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:649:[async_db.c,91]:9452:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:650:[async_db.c,91]:9453:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:651:[async_db.c,91]:9454:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:651:[async_db.c,91]:9455:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:652:[async_db.c,91]:9456:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:653:[async_db.c,91]:9457:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:654:[async_db.c,91]:9458:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:655:[async_db.c,91]:9459:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:655:[async_db.c,91]:9460:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:656:[async_db.c,91]:9461:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:657:[async_db.c,91]:9462:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:658:[async_db.c,91]:9463:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:659:[async_db.c,91]:9465:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:659:[async_db.c,91]:9464:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:660:[async_db.c,91]:9466:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:661:[async_db.c,91]:9467:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:662:[async_db.c,91]:9468:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:662:[async_db.c,91]:9469:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:663:[async_db.c,91]:9470:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:664:[async_db.c,91]:9471:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:665:[async_db.c,91]:9472:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:666:[async_db.c,91]:9473:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:666:[async_db.c,91]:9474:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:667:[async_db.c,91]:9475:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:668:[async_db.c,91]:9476:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:669:[async_db.c,91]:9477:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:670:[async_db.c,91]:9478:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:671:[async_db.c,91]:9479:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:672:[async_db.c,91]:9480:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:672:[async_db.c,91]:9481:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:673:[async_db.c,91]:9482:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:674:[async_db.c,91]:9483:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:675:[async_db.c,91]:9484:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:676:[async_db.c,91]:9485:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:677:[async_db.c,91]:9486:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:07:678:[async_db.c,91]:9487:INFO:connection mysql ok: host=127.0.0.1 user=ulife password=goscam66%%DB dbname=remoteapp port=3306
+[0m[0m18-04-19 10:07:08:154:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 73
+[0m[0m18-04-19 10:07:08:154:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ed2f0 fd 73 error 0
+[0m[0m18-04-19 10:07:08:157:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 74
+[0m[0m18-04-19 10:07:08:157:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13db4e0 fd 74 error 0
+[0m[0m18-04-19 10:07:08:157:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 75
+[0m[0m18-04-19 10:07:08:157:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ee230 fd 75 error 0
+[0m[0m18-04-19 10:07:08:456:[client_av_conn.c,180]:9422:TRACE:client av socket old SO_SNDBUF 19600, socket_buffer_size write buffer size 249856
+[0m[0m18-04-19 10:07:08:456:[client_av_conn.c,187]:9422:TRACE:client av socket new SO_SNDBUF 249856
+[0m[0m18-04-19 10:07:08:458:[client_av_conn.c,180]:9422:TRACE:client av socket old SO_SNDBUF 19600, socket_buffer_size write buffer size 249856
+[0m[0m18-04-19 10:07:08:458:[client_av_conn.c,187]:9422:TRACE:client av socket new SO_SNDBUF 249856
+[0m[0m18-04-19 10:07:08:458:[client_signaling_conn.c,150]:9422:TRACE:on_signaling_connect,uid A99763101001025 index 65535,conn 0x13db4b0,result 480001
+[0m[0m18-04-19 10:07:08:647:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 74, client 0x13db4e0,recved 0,errno 115
+[0m[0m18-04-19 10:07:08:647:[client_av_conn.c,135]:9422:TRACE:av_conn_on_close 0x13ee920, uid A99763101001025
+[0m[0m18-04-19 10:07:08:689:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 73, client 0x13ed2f0,recved 0,errno 115
+[0m[0m18-04-19 10:07:08:689:[client_av_conn.c,135]:9422:TRACE:av_conn_on_close 0x13ee820, uid A99763101001025
+[0m[0m18-04-19 10:07:08:712:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 75, client 0x13ee230,recved 0,errno 115
+[0m[0m18-04-19 10:07:08:712:[client_signaling_conn.c,91]:9422:TRACE:signaling_conn_on_close 65535 0x13db4b0
+[0m[0m18-04-19 10:07:08:916:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 73
+[0m[0m18-04-19 10:07:08:916:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13db4e0 fd 73 error 0
+[0m[0m18-04-19 10:07:08:918:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 74
+[0m[0m18-04-19 10:07:08:918:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ed820 fd 74 error 0
+[0m[0m18-04-19 10:07:08:918:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 75
+[0m[0m18-04-19 10:07:08:918:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ee230 fd 75 error 0
+[0m[0m18-04-19 10:07:08:945:[client_av_conn.c,180]:9422:TRACE:client av socket old SO_SNDBUF 19600, socket_buffer_size write buffer size 249856
+[0m[0m18-04-19 10:07:08:945:[client_av_conn.c,187]:9422:TRACE:client av socket new SO_SNDBUF 249856
+[0m[0m18-04-19 10:07:08:946:[client_av_conn.c,180]:9422:TRACE:client av socket old SO_SNDBUF 19600, socket_buffer_size write buffer size 249856
+[0m[0m18-04-19 10:07:08:946:[client_av_conn.c,187]:9422:TRACE:client av socket new SO_SNDBUF 249856
+[0m[0m18-04-19 10:07:08:947:[client_signaling_conn.c,150]:9422:TRACE:on_signaling_connect,uid A99763101001025 index 65535,conn 0x13ed7f0,result 480001
+[0m[0m18-04-19 10:07:09:320:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 74, client 0x13ed820,recved 0,errno 115
+[0m[0m18-04-19 10:07:09:320:[client_av_conn.c,135]:9422:TRACE:av_conn_on_close 0x13ee920, uid A99763101001025
+[0m[0m18-04-19 10:07:09:459:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 75, client 0x13ee230,recved 0,errno 115
+[0m[0m18-04-19 10:07:09:459:[client_av_conn.c,135]:9422:TRACE:av_conn_on_close 0x13ee820, uid A99763101001025
+[0m[0m18-04-19 10:07:09:466:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 73, client 0x13db4e0,recved 0,errno 115
+[0m[0m18-04-19 10:07:09:466:[client_signaling_conn.c,91]:9422:TRACE:signaling_conn_on_close 65535 0x13ed7f0
+[0m[0m18-04-19 10:07:09:631:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 73
+[0m[0m18-04-19 10:07:09:631:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ed820 fd 73 error 0
+[0m[0m18-04-19 10:07:09:631:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 74
+[0m[0m18-04-19 10:07:09:632:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13edcd0 fd 74 error 0
+[0m[0m18-04-19 10:07:09:633:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 75
+[0m[0m18-04-19 10:07:09:633:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ee2d0 fd 75 error 0
+[0m[0m18-04-19 10:07:09:666:[client_signaling_conn.c,150]:9422:TRACE:on_signaling_connect,uid A99763101001025 index 65535,conn 0x13ee490,result 480001
+[0m[0m18-04-19 10:07:09:668:[client_av_conn.c,180]:9422:TRACE:client av socket old SO_SNDBUF 19600, socket_buffer_size write buffer size 249856
+[0m[0m18-04-19 10:07:09:668:[client_av_conn.c,187]:9422:TRACE:client av socket new SO_SNDBUF 249856
+[0m[0m18-04-19 10:07:09:668:[client_av_conn.c,180]:9422:TRACE:client av socket old SO_SNDBUF 19600, socket_buffer_size write buffer size 249856
+[0m[0m18-04-19 10:07:09:668:[client_av_conn.c,187]:9422:TRACE:client av socket new SO_SNDBUF 249856
+[0m[0m18-04-19 10:07:10:174:[../common/tcp_listener.c,27]:9422:DEBUG:socket 11 accept 76
+[0m[0m18-04-19 10:07:10:174:[../common/tcp_client.c,344]:9422:DEBUG:tcp_client_async_read 0x13ee750 fd 76 error 0
+[0m[0m18-04-19 10:07:10:175:[dev_main_conn.c,243]:9422:TRACE:on_dev_connect A99763101001025 0x13ef0d0
+[0m[0m18-04-19 10:07:10:236:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 75, client 0x13ee2d0,recved 0,errno 115
+[0m[0m18-04-19 10:07:10:236:[client_av_conn.c,135]:9422:TRACE:av_conn_on_close 0x13ee650, uid A99763101001025
+[0m[0m18-04-19 10:07:10:468:[../common/tcp_client.c,98]:9422:INFO:tcp_client_recv_cb recv error,socket 74, client 0x13edcd0,recved 0,errno 115
+[0m[0m18-04-19 10:07:10:468:[client_av_conn.

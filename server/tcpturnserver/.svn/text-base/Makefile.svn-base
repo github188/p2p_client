@@ -1,0 +1,22 @@
+TARGET=tcpturnserver
+CC=g++
+LINKFLAGS=-L/usr/local/lib/ -L/usr/local/lib/event2/ -lpthread -levent -L/usr/lib64/mysql -lmysqlclient
+OBJS= client_av_conn.o client_pull_conn.o client_signaling_conn.o dev_av_conn.o dev_main_conn.o \
+	  dev_push_conn.o tcpturnserver.o gss_setting.o rtmp_pusher.o unknown_tcp.o async_db.o librtmp/srs_librtmp.o \
+	  ../common/disp_client.o ../common/inifile.o  ../common/log.o ../common/path.o ../common/shared_cmd.o \
+	  ../common/tcp_client.o ../common/tcp_listener.o ../common/tm.o
+CP=cp
+CFLAGS=-g -o2 -I/usr/local/include/ -I../third/cstd -Ilibrtmp -I../common -I/usr/include/mysql -DLINUX -DUSE_SHARED_CMD=1 -DTCP_CLIENT_USE_LOG
+CPFLAG=-cf
+INSTALL=./
+all:$(TARGET)
+$(TARGET):$(OBJS)
+	$(CC) $(OBJS)  $(LINKFLAGS) -o $@
+%.o:%.cpp
+	$(CC) -c $(CFLAGS) $< -o $@
+%.o:%.c
+	$(CC) -c $(CFLAGS) $< -o $@
+install:
+	$(CP) $(CPFLAG) $(TARGET) $(INSTALL)
+clean:
+	rm -rf *.o ../common/*.o librtmp/*.o $(TARGET)

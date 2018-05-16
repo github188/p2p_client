@@ -1,0 +1,346 @@
+#include "dev_main_conn.h"
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "ht-internal.h"
+#include "gss_mem.h"
+#include "tcp_client.h"
+#include "queue.h"
+#include "client_signaling_conn.h"
+#include "log.h"
+#include "async_db.h"
+#include "flow_stat.h"
+
+#define DEV_MAX_CLINET_CONN 64
+
+extern time_t g_now_time;
+extern struct event_base* g_ev_base;
+extern struct flow_stat g_recv_flow_stat; //statistics receive net flow stat
+extern struct flow_stat g_send_flow_stat; //statistics send net flow stat
+
+typedef struct client_conn_tailq 
+{
+	TAILQ_ENTRY(client_conn_tailq) tailq;
+
+	unsigned short index;
+	struct client_signaling_conn* client_conn; //client signaling connection
+}client_conn_tailq;
+
+//device main tcp connection
+typedef struct dev_main_conn{
+	HT_ENTRY(dev_main_conn) hash_node;
+	unsigned hash_val; //cache hash value 
+
+	void* tcp_conn;//device tcp connection
+
+	char* uid; //device uid
+
+	//all client tcp connection
+	client_conn_tailq  client_conn[DEV_MAX_CLINET_CONN];
+
+	//free client connection
+	TAILQ_HEAD(free_tailq_entrys, client_conn_tailq) free_client_conns;
+
+	//used online client connection
+	TAILQ_HEAD(online_tailq_entrys, client_conn_tailq) online_client_conns;
+
+	//heart timer event
+	struct event* heart_timer; 
+
+	//last receive data time
+	time_t last_recv_tm; 
+
+	//kick out by same uid device
+	char is_kickout;
+}dev_main_conn;
+
+static inline unsigned main_conn_hash_fn(struct dev_main_conn *c)
+{
+	return c->hash_val; 
+}
+
+static inline int main_conn_eq(struct dev_main_conn *c1, struct dev_main_conn *c2)
+{
+	return strcmp(c1->uid, c2->uid)==0; 
+}
+
+HT_HEAD(main_conn_entrys, dev_main_conn);
+HT_PROTOTYPE(main_conn_entrys, dev_main_conn, hash_node, main_conn_hash_fn, main_conn_eq)
+HT_GENERATE(main_conn_entrys, dev_main_conn, hash_node, main_conn_hash_fn, main_conn_eq, 0.5, gss_malloc, gss_realloc, gss_free)
+
+//all device main tcp connections
+typedef struct dev_main_conn_entries{
+	struct main_conn_entrys hash_entrys;
+	unsigned int total_signaling_count;
+}dev_main_conn_entries;
+
+dev_main_conn_entries g_main_conn_entries={HT_INITIALIZER(), 0}; 
+
+//call back receive device command
+static int main_conn_on_recv(void* client, const char* buf, int buf_len)
+{
+	dev_main_conn* conn = (dev_main_conn*)tcp_client_user_data(client);
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+
+	conn->last_recv_tm = g_now_time;
+	flow_stat_add(&g_recv_flow_stat, buf_len);
+
+	if(header->cmd == GSS_SIGNALING_DATA)//forward data to client signaling connection
+	{
+		unsigned short client_idx = ntohs(*(unsigned short*)(header+1));
+		struct client_signaling_conn* client_conn;
+
+		if(client_idx >= DEV_MAX_CLINET_CONN)
+		{
+			LOG(LOG_LEVEL_ERROR, "main_conn_on_recv invalid client index %d %p", client_idx, conn);
+			return -1;
+		}
+
+		client_conn = conn->client_conn[client_idx].client_conn;
+		if(client_conn)
+			client_signaling_conn_send(client_conn, buf, buf_len);
+	}
+	else if(header->cmd == GSS_HEART_CMD)
+	{
+		tcp_client_stat_send(conn->tcp_conn, buf, buf_len); //response heart
+	}
+	return 0;
+}
+
+inline void destroy_main_conn(dev_main_conn* conn)
+{
+	client_conn_tailq* client_tailq;
+
+	TAILQ_FOREACH(client_tailq, &conn->online_client_conns, tailq)
+	{
+		g_main_conn_entries.total_signaling_count--;
+		client_signaling_dev_closed(client_tailq->client_conn);
+	}
+
+	destroy_tcp_client(conn->tcp_conn);
+
+	if(conn->is_kickout == 0)
+		HT_REMOVE(main_conn_entrys, &g_main_conn_entries.hash_entrys, conn);
+
+	event_free(conn->heart_timer);
+
+	async_db_main_conn_shutdown(conn->uid);
+
+	gss_free(conn->uid);
+	gss_free(conn);
+}
+
+//call back tcp closed
+static void main_conn_on_close(void* client)
+{
+	dev_main_conn* conn = (dev_main_conn*)tcp_client_user_data(client);
+
+	LOG(LOG_LEVEL_TRACE, "main_conn_on_close %s %p", conn->uid, conn);
+
+	destroy_main_conn(conn);
+}
+
+static void main_conn_heart_timer(evutil_socket_t fd, short events, void *arg)
+{
+	dev_main_conn* conn = (dev_main_conn*)arg;
+	if(g_now_time - conn->last_recv_tm >= GSS_HEART_SPAN*2)
+	{
+		LOG(LOG_LEVEL_TRACE, "main_conn_heart_timer %s %p", conn->uid, conn);
+		destroy_main_conn(conn);
+	}
+}
+
+static void dev_main_kickout(char* uid, unsigned hash_val)
+{
+	dev_main_conn* dev_conn = NULL;
+	dev_main_conn conn;
+
+	//find device connection by uid
+	conn.uid = (char*)uid;
+	conn.hash_val = hash_val;	
+	dev_conn = HT_FIND(main_conn_entrys, &g_main_conn_entries.hash_entrys, &conn);
+	if(dev_conn)
+	{
+		GSS_DATA_HEADER header;
+
+		LOG(LOG_LEVEL_WARN, "dev_push_kickout %s %p", dev_conn->uid, dev_conn);
+
+		header.cmd = GSS_KICKOUT;
+		header.data_seq = LAST_DATA_SEQ;
+		header.len = 0;
+
+		tcp_client_stat_send(dev_conn->tcp_conn, (const char*)&header, sizeof(GSS_DATA_HEADER));
+
+		dev_conn->is_kickout = 1;
+		HT_REMOVE(main_conn_entrys, &g_main_conn_entries.hash_entrys, dev_conn);
+	} 
+}
+
+static inline void main_send_connect_result(dev_main_conn* conn, int result)
+{
+#define RESULT_CMD_LEN (sizeof(GSS_DATA_HEADER) + sizeof(int))
+	char buf[RESULT_CMD_LEN];
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+
+	header->cmd = GSS_CONNECT_RESULT;
+	header->data_seq = LAST_DATA_SEQ;
+	header->len = htons(sizeof(int));
+
+	*(int*)(header+1) = htonl(result);
+
+	tcp_client_stat_send(conn->tcp_conn, buf, RESULT_CMD_LEN);
+}
+
+//receive login command, insert to hash table
+void on_dev_connect(void* tcp_client, GSS_DATA_HEADER* cmd_header)
+{
+	dev_main_conn* conn;
+	GSS_LOGIN_CMD* cmd = (GSS_LOGIN_CMD*)(cmd_header+1);
+	int i;
+	struct timeval tv = {GSS_HEART_SPAN*2, 0}; 
+	unsigned hash_val;
+
+	hash_val = ht_string_hash(cmd->uid);
+	//kickout same uid device
+	dev_main_kickout(cmd->uid, hash_val);
+
+	conn = (dev_main_conn*)gss_malloc(sizeof(dev_main_conn));
+
+	conn->is_kickout = 0;
+
+	conn->last_recv_tm = g_now_time;
+	//add heart timer, libevent common timer
+	conn->heart_timer = event_new(g_ev_base, -1, EV_TIMEOUT|EV_PERSIST, main_conn_heart_timer, conn);
+	evtimer_add(conn->heart_timer, &tv);
+
+	conn->tcp_conn = tcp_client;
+	conn->uid = (char*)gss_malloc(MAX_UID_LEN);
+
+	strcpy(conn->uid, cmd->uid);
+	conn->hash_val = hash_val;
+
+	TAILQ_INIT(&conn->free_client_conns);
+	TAILQ_INIT(&conn->online_client_conns);
+
+	for(i=0; i<DEV_MAX_CLINET_CONN; i++)
+	{
+		conn->client_conn[i].index = i;
+		conn->client_conn[i].client_conn = NULL;
+		TAILQ_INSERT_TAIL(&conn->free_client_conns, &conn->client_conn[i], tailq);
+	}
+
+	HT_INSERT(main_conn_entrys, &g_main_conn_entries.hash_entrys, conn);
+
+	//change tcp callback function
+	tcp_client_set_cb(tcp_client, main_conn_on_recv, main_conn_on_close, conn); 
+
+	main_send_connect_result(conn, GSS_NO_ERROR);
+
+	async_db_main_conn_connected(conn->uid);
+
+	LOG(LOG_LEVEL_TRACE, "on_dev_connect %s %p", conn->uid, conn); 
+}
+
+void dev_main_conn_send(struct dev_main_conn* main_conn, const char* buf, int buf_len)
+{
+	if(!main_conn)
+		return;
+	tcp_client_stat_send(main_conn->tcp_conn, buf, buf_len);
+}
+
+inline void main_conn_send_notify(dev_main_conn* dev_conn, unsigned char cmd, unsigned short client_idx)
+{
+#define NOTIFY_CMD_LEN (sizeof(GSS_DATA_HEADER) + sizeof(unsigned short))
+	char buf[NOTIFY_CMD_LEN];
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+
+	header->cmd = cmd;
+	header->data_seq = LAST_DATA_SEQ;
+	header->len = htons(sizeof(unsigned short));
+	*(unsigned short*)(header+1) = htons(client_idx);
+
+	tcp_client_stat_send(dev_conn->tcp_conn, buf, NOTIFY_CMD_LEN);
+}
+
+int main_conn_av_connect(const char* uid, unsigned int conn_idx)
+{
+	dev_main_conn* dev_conn = NULL;
+	dev_main_conn conn;
+
+#define AV_CONNECT_CMD_LEN (sizeof(GSS_DATA_HEADER) + sizeof(unsigned int))
+	char buf[AV_CONNECT_CMD_LEN];
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+
+	//find device connection by uid
+	conn.uid = (char*)uid;
+	conn.hash_val = ht_string_hash(conn.uid);	
+	dev_conn = HT_FIND(main_conn_entrys, &g_main_conn_entries.hash_entrys, &conn);
+	if(!dev_conn)
+		return GSS_DEVICE_OFFLINE;
+
+	//send av connection command to device
+	header->cmd = GSS_CLIENT_AV_LOGIN_CMD;
+	header->data_seq = LAST_DATA_SEQ;
+	header->len = htons(sizeof(unsigned int));
+	*(unsigned int*)(header+1) = htonl(conn_idx);
+
+	tcp_client_stat_send(dev_conn->tcp_conn, buf, AV_CONNECT_CMD_LEN);
+
+	return GSS_NO_ERROR;
+}
+
+int main_conn_signaling_connect(const char* uid, void* client_conn, struct dev_main_conn** main_conn, unsigned short* client_idx)
+{
+	dev_main_conn* dev_conn = NULL;
+	dev_main_conn conn;
+	client_conn_tailq* client_tailq;
+
+	//find device connection by uid
+	conn.uid = (char*)uid;
+	conn.hash_val = ht_string_hash(conn.uid);	
+	dev_conn = HT_FIND(main_conn_entrys, &g_main_conn_entries.hash_entrys, &conn);
+	if(!dev_conn)
+		return GSS_DEVICE_OFFLINE;
+
+	client_tailq = TAILQ_FIRST(&dev_conn->free_client_conns);
+	if(!client_tailq)
+		return GSS_TOO_MANY_CONN;
+
+	*main_conn = dev_conn;
+	*client_idx = client_tailq->index;
+	client_tailq->client_conn = (struct client_signaling_conn*)client_conn;
+
+	//remove from free connections,add to online connections
+	TAILQ_REMOVE(&dev_conn->free_client_conns, client_tailq, tailq);
+	TAILQ_INSERT_TAIL(&dev_conn->online_client_conns, client_tailq, tailq);
+
+	//send notify to device
+	main_conn_send_notify(dev_conn, GSS_SIGNALING_CONNECTED, *client_idx);
+
+	g_main_conn_entries.total_signaling_count++;
+
+	return GSS_NO_ERROR;
+}
+
+void main_conn_signaling_close(struct dev_main_conn* main_conn, void* client_conn, unsigned short client_idx)
+{
+	client_conn_tailq* client_tailq = &main_conn->client_conn[client_idx];
+
+	//remove from online connections,add to free connections
+	TAILQ_REMOVE(&main_conn->online_client_conns, client_tailq, tailq);
+	TAILQ_INSERT_TAIL(&main_conn->free_client_conns, client_tailq, tailq);
+
+	client_tailq->client_conn = NULL;
+
+	//send notify to device
+	main_conn_send_notify(main_conn, GSS_SIGNALING_DISCONNECTED, client_idx);
+
+	g_main_conn_entries.total_signaling_count--;
+}
+
+void get_main_conn_count(unsigned int* main_count, unsigned int* signaling_count)
+{
+	*main_count = g_main_conn_entries.hash_entrys.hth_n_entries;
+
+	*signaling_count = g_main_conn_entries.total_signaling_count;
+}

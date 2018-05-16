@@ -1,0 +1,245 @@
+#include "client_pull_conn.h"
+#include "gss_mem.h"
+#include "log.h"
+#include "dev_push_conn.h"
+#include "gss_setting.h"
+#include "flow_stat.h"
+
+extern time_t g_now_time;
+extern struct event_base* g_ev_base;
+extern struct flow_stat g_recv_flow_stat; //statistics receive net flow stat
+extern struct flow_stat g_send_flow_stat; //statistics send net flow stat
+
+#define GSS_MW_COUNT (128)
+
+//call back receive client av command
+static int pull_conn_on_recv(void* client, const char* buf, int buf_len)
+{
+	client_pull_conn* conn = (client_pull_conn*)tcp_client_user_data(client);
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+
+	conn->last_recv_tm = g_now_time;
+	flow_stat_add(&g_recv_flow_stat, buf_len);
+
+	if(header->cmd == GSS_HEART_CMD)
+	{
+		tcp_client_stat_send(conn->tcp_conn, buf, buf_len); //response heart
+	}
+	return 0;
+}
+
+inline void destroy_pull_conn(client_pull_conn* conn)
+{
+	shared_cmd_tailq* sc_tailq;
+	shared_cmd_tailq* next_tailq;
+
+	if(conn->push_conn)
+		dev_push_conn_pull_closed(conn->push_conn, conn);
+
+	destroy_tcp_client(conn->tcp_conn);
+
+	event_free(conn->heart_timer);
+
+	sc_tailq = TAILQ_FIRST(&conn->av_cmd);
+	while(sc_tailq != TAILQ_END(&conn->av_cmd))
+	{
+		next_tailq = TAILQ_NEXT(sc_tailq, tailq);
+
+		shared_cmd_release(sc_tailq->sc);
+		free_shared_cmd_tailq(sc_tailq);
+
+		sc_tailq = next_tailq;
+	}
+
+	gss_free(conn);
+}
+
+//call back tcp closed
+static void pull_conn_on_close(void* client)
+{
+	client_pull_conn* conn = (client_pull_conn*)tcp_client_user_data(client);
+	LOG(LOG_LEVEL_TRACE, "pull_conn_on_close %p", conn); 
+	destroy_pull_conn(conn);
+}
+
+static void pull_conn_heart_timer(evutil_socket_t fd, short events, void *arg)
+{
+	client_pull_conn* conn = (client_pull_conn*)arg;
+	if(g_now_time - conn->last_recv_tm >= GSS_HEART_SPAN*2)
+	{
+		LOG(LOG_LEVEL_TRACE, "pull_conn_heart_timer %p", conn); 
+		destroy_pull_conn(conn);
+	}
+}
+
+inline void pull_send_connect_result(client_pull_conn* conn, int result)
+{
+#define RESULT_CMD_LEN (sizeof(GSS_DATA_HEADER) + sizeof(int))
+	char buf[RESULT_CMD_LEN];
+	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)buf;
+
+	header->cmd = GSS_CONNECT_RESULT;
+	header->data_seq = LAST_DATA_SEQ;
+	header->len = htons(sizeof(int));
+
+	*(int*)(header+1) = htonl(result);
+
+	tcp_client_stat_send(conn->tcp_conn, buf, RESULT_CMD_LEN);
+}
+
+static void pull_merged_write(client_pull_conn* pull_conn)
+{
+	struct iovec iov[GSS_MW_COUNT];
+	int cnt = 1;
+	shared_cmd* send_cmd[GSS_MW_COUNT];
+	unsigned int first_stamp, cur_stamp;
+	shared_cmd_tailq* sc_tailq;
+	shared_cmd* sc;
+
+	sc_tailq = TAILQ_FIRST(&pull_conn->av_cmd);
+	if(!sc_tailq)
+		return;
+
+	sc = sc_tailq->sc;
+
+	first_stamp = sc->time_stamp;
+	iov[0].iov_len = sc->cmd_len;
+	iov[0].iov_base = sc->cmd;
+	send_cmd[0] = sc;
+
+	flow_stat_add(&g_send_flow_stat, sc->cmd_len); 
+
+	TAILQ_REMOVE(&pull_conn->av_cmd, sc_tailq, tailq);
+	free_shared_cmd_tailq(sc_tailq);
+
+	while(sc_tailq = TAILQ_FIRST(&pull_conn->av_cmd))
+	{
+		sc = sc_tailq->sc;
+		cur_stamp = sc->time_stamp;
+
+		if(cur_stamp-first_stamp <= pull_conn->mw_time) //merged-write interval 
+		{
+			iov[cnt].iov_len = sc->cmd_len;
+			iov[cnt].iov_base = sc->cmd;
+			send_cmd[cnt] = sc;
+			cnt++;
+
+			flow_stat_add(&g_send_flow_stat, sc->cmd_len); 
+
+			TAILQ_REMOVE(&pull_conn->av_cmd, sc_tailq, tailq);
+			free_shared_cmd_tailq(sc_tailq);
+		}
+		else
+		{
+			break;
+		}
+
+		if(cnt == GSS_MW_COUNT)
+			break;
+	}
+
+	tcp_client_shared_writev(pull_conn->tcp_conn, iov, send_cmd, cnt);
+}
+
+static void pull_conn_set_sock_opt(client_pull_conn* pull_conn)
+{
+	evutil_socket_t sock = tcp_client_get_handle(pull_conn->tcp_conn);
+	int socket_buffer_size = pull_conn->mw_time * get_gss_setting()->max_push_bitrate / 8;
+
+	// socket send buffer, system will double it.
+	int nb_sbuf = socket_buffer_size / 2;
+
+	int onb_sbuf = 0;
+#ifdef WIN32
+	int sock_buf_size = sizeof(int);
+#else
+	socklen_t sock_buf_size = sizeof(int);
+#endif
+	
+	getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&onb_sbuf, &sock_buf_size);
+	LOG(LOG_LEVEL_TRACE, "pull socket old SO_SNDBUF %d, merge write buffer size %d", onb_sbuf, socket_buffer_size); 
+
+	if(onb_sbuf < socket_buffer_size)
+	{
+		setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&nb_sbuf, sock_buf_size);
+
+		getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&onb_sbuf, &sock_buf_size);
+		LOG(LOG_LEVEL_TRACE, "pull socket new SO_SNDBUF %d", onb_sbuf);
+	}
+}
+
+
+void on_client_pull_connect(void* tcp_client, GSS_DATA_HEADER* cmd_header)
+{
+	GSS_LOGIN_CMD* cmd = (GSS_LOGIN_CMD*)(cmd_header+1);
+	client_pull_conn* pull_conn ;
+	struct timeval tv = {GSS_HEART_SPAN*2, 0}; 
+	int result;
+
+	pull_conn = (client_pull_conn*)gss_malloc(sizeof(client_pull_conn));
+
+	pull_conn->tcp_conn = tcp_client;
+
+	pull_conn->push_conn = NULL;
+
+	pull_conn->last_recv_tm = g_now_time;
+
+	pull_conn->mw_time = get_gss_setting()->mw_time;
+
+	TAILQ_INIT(&pull_conn->av_cmd);
+
+	//add heart timer, libevent common timer
+	pull_conn->heart_timer = event_new(g_ev_base, -1, EV_TIMEOUT|EV_PERSIST, pull_conn_heart_timer, pull_conn);
+	evtimer_add(pull_conn->heart_timer, &tv);
+
+	//change tcp callback function
+	tcp_client_set_cb(tcp_client, pull_conn_on_recv, pull_conn_on_close, pull_conn);
+
+	result = dev_push_conn_pull_connect(cmd->uid, pull_conn);
+
+	pull_send_connect_result(pull_conn, result);
+
+	if(result == GSS_NO_ERROR)
+	{
+		if(pull_conn->mw_time > 0)
+			pull_conn_set_sock_opt(pull_conn);
+
+		//if has gop cache, now send
+		if(!TAILQ_EMPTY(&pull_conn->av_cmd))
+			pull_merged_write(pull_conn);
+	}
+}
+
+void pull_conn_on_recv_av(client_pull_conn* pull_conn, shared_cmd* sc)
+{
+	shared_cmd_tailq* first = NULL;
+	shared_cmd_tailq* cur;
+	
+	first = TAILQ_FIRST(&pull_conn->av_cmd);
+
+	cur = malloc_shared_cmd_tailq(sc);
+	shared_cmd_add_ref(sc); //release it when send competed or destroy
+	TAILQ_INSERT_TAIL(&pull_conn->av_cmd, cur, tailq);
+
+	if(first)
+	{
+		unsigned int first_stamp, cur_stamp;
+		first_stamp = first->sc->time_stamp;
+		cur_stamp = sc->time_stamp;
+
+		if(cur_stamp-first_stamp > pull_conn->mw_time) //merged-write interval 
+			pull_merged_write(pull_conn);
+	}
+}
+
+void pull_conn_on_push_closed(client_pull_conn* pull_conn)
+{
+	GSS_DATA_HEADER header;
+
+	pull_conn->push_conn = NULL;
+
+	header.cmd = GSS_PUSH_DISCONNECTED;
+	header.data_seq = LAST_DATA_SEQ;
+	header.len = 0;
+	tcp_client_stat_send(pull_conn->tcp_conn, (const char*)&header, sizeof(GSS_DATA_HEADER));
+}

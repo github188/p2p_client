@@ -1,0 +1,17 @@
+#ifndef __GSS__ASYNC_DB__H__
+#define __GSS__ASYNC_DB__H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void async_db_init(void);
+void async_db_uninit(void);
+void async_db_main_conn_shutdown(const char* user);
+void async_db_main_conn_connected(const char* user);
+
+#ifdef __cplusplus
+}    
+#endif
+
+#endif

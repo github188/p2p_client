@@ -1,0 +1,13 @@
+K 18
+svn:global-ignores
+V 36
+*
+gss.vcproj.TXH.Administrator.user
+
+K 10
+svn:ignore
+V 12
+*.ncb
+*.suo
+
+END
