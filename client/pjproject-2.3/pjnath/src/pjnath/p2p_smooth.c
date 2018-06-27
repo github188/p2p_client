@@ -16,10 +16,16 @@
 
 //malloc from smooth buffer
 
+#define P2P_SMOOTH_BOUNDARY 4
+#define P2P_SMOOTH_ALIGN(size, boundary) (((size) + ((boundary) - 1)) & ~((boundary) - 1))
+
 static void* p2p_smooth_malloc(p2p_smooth* smooth, unsigned int len)
 {
 #ifdef USE_P2P_SMOOTH_MALLOC
 	void* ret = NULL;
+
+	//align to P2P_SMOOTH_BOUNDARY
+	len = P2P_SMOOTH_ALIGN(len, P2P_SMOOTH_BOUNDARY);
 
 	pj_mutex_lock(smooth->list_mutex);
 
@@ -51,7 +57,7 @@ static void* p2p_smooth_malloc(p2p_smooth* smooth, unsigned int len)
 		|------| ----------  |------|
 		*/
 		if(smooth->smooth_buffer.valid < len)
-			ret = malloc(len);
+			ret = p2p_malloc(len);
 		else
 		{
 			unsigned int remain = smooth->smooth_buffer.size - (smooth->smooth_buffer.begin-smooth->smooth_buffer.buffer);
@@ -92,6 +98,9 @@ static void* p2p_smooth_malloc(p2p_smooth* smooth, unsigned int len)
 static void p2p_smooth_free(p2p_smooth* smooth, void* buffer, unsigned int len)
 {
 #ifdef USE_P2P_SMOOTH_MALLOC
+	//align to P2P_SMOOTH_BOUNDARY
+	len = P2P_SMOOTH_ALIGN(len, P2P_SMOOTH_BOUNDARY);
+
 	//malloc by p2p_malloc
 	if((char*)buffer < smooth->smooth_buffer.buffer 
 		|| (char*)buffer >= smooth->smooth_buffer.buffer+smooth->smooth_buffer.size)
@@ -121,24 +130,33 @@ static void p2p_smooth_free(p2p_smooth* smooth, void* buffer, unsigned int len)
 //pop from cache list and callback to user
 static void p2p_smooth_callback_play(p2p_smooth* smooth, unsigned int play_count)
 {
-	p2p_smooth_item* item = NULL;
 	unsigned int i;
 	if(play_count > smooth->item_count)
 		play_count = smooth->item_count;
 	for(i=0; i<play_count; i++)
 	{
+		p2p_smooth_item* item = NULL;
+
 		pj_mutex_lock(smooth->list_mutex);
-		item = smooth->first_item;
-		smooth->first_item = smooth->first_item->next;
-		if(smooth->first_item == NULL)
-			smooth->last_item = NULL;
-		smooth->item_count--;
+		if(smooth->item_count)
+		{
+			item = smooth->first_item;
+			smooth->first_item = smooth->first_item->next;
+			if(smooth->first_item == NULL)
+				smooth->last_item = NULL;
+			smooth->item_count--;
+		}
 		pj_mutex_unlock(smooth->list_mutex);
 
-		if(smooth->cb)
-			(*smooth->cb)((const char*)(item+1), item->len, smooth->user_data);
+		if(item)
+		{
+			if(smooth->cb)
+				(*smooth->cb)((const char*)(item+1), item->len, smooth->user_data);
 
-		p2p_smooth_free(smooth, item, item->len+sizeof(p2p_smooth_item));
+			p2p_smooth_free(smooth, item, item->len+sizeof(p2p_smooth_item));
+		}
+		else
+			break;
 	}
 }
 
@@ -209,7 +227,7 @@ static void p2p_smooth_timer(pj_timer_heap_t *th, pj_timer_entry *e)
 			smooth->remain = 0;
 			smooth->status = P2P_SMOOTH_PLAYING;
 			
-			PJ_LOG(4,("p2p_smooth", "p2p_smooth_push %p enter playing status", smooth));
+			//PJ_LOG(4,("p2p_smooth", "p2p_smooth_push %p enter playing status", smooth));
 
 			if((int)smooth->cache_span == get_p2p_global()->smooth_span)
 				pj_gettickcount(&smooth->net_good_begin_tm);
@@ -225,7 +243,7 @@ static void p2p_smooth_timer(pj_timer_heap_t *th, pj_timer_entry *e)
 
 				p2p_smooth_callback_play(smooth, smooth->item_count);
 
-				PJ_LOG(4,("p2p_smooth", "p2p_smooth_push %p status playing to cache status", smooth));
+				//PJ_LOG(4,("p2p_smooth", "p2p_smooth_push %p status playing to cache status", smooth));
 
 				smooth->status = P2P_SMOOTH_CACHEING;
 				smooth->cache_span += 100;
@@ -281,11 +299,13 @@ struct p2p_smooth* p2p_create_smooth(P2P_SMOOTH_CB cb, void* user_data)
 	smooth->remain = 0;
 	smooth->cache_span = P2P_SMOOTH_MIN_SPAN;
 	smooth->last_push_tm.sec  = smooth->last_push_tm.msec = 0;
-	
+
+#ifdef USE_P2P_SMOOTH_MALLOC	
 	smooth->smooth_buffer.valid = smooth->smooth_buffer.size = P2P_SMOOTH_BUFFER_SIZE;
 	smooth->smooth_buffer.buffer = p2p_malloc(P2P_SMOOTH_BUFFER_SIZE);
 	smooth->smooth_buffer.begin = smooth->smooth_buffer.buffer;
 	smooth->smooth_buffer.end = smooth->smooth_buffer.buffer+P2P_SMOOTH_BUFFER_SIZE;
+#endif
 
 	pj_mutex_create_recursive(pool, NULL, &smooth->list_mutex);
 
@@ -303,6 +323,7 @@ static void p2p_smooth_free_items(struct p2p_smooth* smooth)
 		return;
 
 	pj_mutex_lock(smooth->list_mutex);
+
 	item = smooth->first_item;
 	while(item)
 	{
@@ -321,18 +342,18 @@ void p2p_smooth_reset(struct p2p_smooth* smooth)
 	if(smooth==NULL)
 		return;	
 
-	PJ_LOG(4,("p2p_smooth", "p2p_smooth_reset begin"));
+	PJ_LOG(4,("p2p_smooth", "p2p_smooth_reset begin %p", smooth));
 
 	pj_timer_heap_cancel_if_active(get_p2p_global()->timer_heap, &smooth->timer, 0);
 
 	p2p_smooth_free_items(smooth);
-	
+
 	smooth->status = P2P_SMOOTH_NONE;
 	smooth->remain = 0;
 	smooth->cache_span = P2P_SMOOTH_MIN_SPAN;
 	smooth->last_push_tm.sec  = smooth->last_push_tm.msec = 0;
 
-	PJ_LOG(4,("p2p_smooth", "p2p_smooth_reset end"));
+	PJ_LOG(4,("p2p_smooth", "p2p_smooth_reset end %p", smooth));
 }
 
 void p2p_destroy_smooth(struct p2p_smooth* smooth)
@@ -345,9 +366,9 @@ void p2p_destroy_smooth(struct p2p_smooth* smooth)
 	pj_timer_heap_cancel_if_active(get_p2p_global()->timer_heap, &smooth->timer, 0);
 
 	p2p_smooth_free_items(smooth);
-
-	free(smooth->smooth_buffer.buffer);
-
+#ifdef USE_P2P_SMOOTH_MALLOC	
+	p2p_free(smooth->smooth_buffer.buffer);
+#endif
 	pj_mutex_destroy(smooth->list_mutex);
 
 	delay_destroy_pool(smooth->pool);

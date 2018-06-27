@@ -1,17 +1,19 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniupnpc", "miniupnpc-1.9.20150206\msvc\miniupnpc.vcproj", "{D28CE435-CB33-4BAE-8A52-C6EF915956F5}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "miniupnpc", "miniupnpc-1.9.20150206\msvc\miniupnpc.vcxproj", "{D28CE435-CB33-4BAE-8A52-C6EF915956F5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p2pdemo", "sdk\p2pdemo\p2pdemo.vcproj", "{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "p2pdemo", "sdk\p2pdemo\p2pdemo.vcxproj", "{ACCD920F-3FCF-419A-9629-7AE73E1EFBA2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gssdemo", "sdk\gssdemo\gssdemo.vcproj", "{C8F8AB25-872B-47E5-8E67-286B445725DA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gssdemo", "sdk\gssdemo\gssdemo.vcxproj", "{C8F8AB25-872B-47E5-8E67-286B445725DA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjnath", "pjproject-2.3\pjnath\build\pjnath.vcproj", "{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjnath", "pjproject-2.3\pjnath\build\pjnath.vcxproj", "{A5D9AA24-08ED-48B9-BD65-F0A25E96BFC4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjlib", "pjproject-2.3\pjlib\build\pjlib.vcproj", "{DA0E03ED-53A7-4050-8A85-90541C5509F8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjlib", "pjproject-2.3\pjlib\build\pjlib.vcxproj", "{DA0E03ED-53A7-4050-8A85-90541C5509F8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjlib_util", "pjproject-2.3\pjlib-util\build\pjlib_util.vcproj", "{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pjlib_util", "pjproject-2.3\pjlib-util\build\pjlib_util.vcxproj", "{FE07F272-AE7F-4549-9E9F-EF9B80CB1693}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

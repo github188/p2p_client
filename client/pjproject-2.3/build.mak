@@ -7,8 +7,8 @@ export MACHINE_NAME := auto
 export OS_NAME := auto
 export HOST_NAME := unix
 export CC_NAME := gcc
-export TARGET_NAME := x86_64-unknown-linux-gnu
-export CROSS_COMPILE := 
+export TARGET_NAME := arm-hisiv300-linux-gnu
+export CROSS_COMPILE := arm-hisiv300-linux-
 export LINUX_POLL := select 
 export SHLIB_SUFFIX := so
 
@@ -134,8 +134,8 @@ SDL_CFLAGS =
 SDL_LDFLAGS = 
 
 # FFMPEG flags
-FFMPEG_CFLAGS =   
-FFMPEG_LDFLAGS =   
+FFMPEG_CFLAGS =  
+FFMPEG_LDFLAGS =  
 
 # Video4Linux2
 V4L2_CFLAGS = 
@@ -163,10 +163,10 @@ PJ_VIDEO_LDFLAGS += $(SDL_LDFLAGS) $(FFMPEG_LDFLAGS) $(V4L2_LDFLAGS) \
                    $(OPENH264_LDFLAGS) $(LIBYUV_LDFLAGS)
 
 # CFLAGS, LDFLAGS, and LIBS to be used by applications
-export APP_CC := gcc
-export APP_CXX := g++
+export APP_CC := arm-hisiv300-linux-gcc
+export APP_CXX := arm-hisiv300-linux-g++
 export APP_CFLAGS := -DPJ_AUTOCONF=1\
-	-O2 -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1 -DOPENSSL_NO_SSL2=1\
+	-O2 -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1\
 	$(PJ_VIDEO_CFLAGS) \
 	-I$(PJDIR)/pjlib/include\
 	-I$(PJDIR)/pjlib-util/include\
@@ -260,7 +260,7 @@ export APP_LDLIBS := $(PJSUA_LIB_LDLIB) \
 	$(APP_THIRD_PARTY_LIBS)\
 	$(APP_THIRD_PARTY_EXT)\
 	$(PJLIB_LDLIB) \
-	-luuid -lm -lrt -lpthread    -lcrypto -lssl
+	-lm -lrt -lpthread 
 export APP_LDXXLIBS := $(PJSUA2_LIB_LDLIB) \
 	-lstdc++ \
 	$(APP_LDLIBS)
@@ -283,6 +283,6 @@ export PJ_LIBXX_FILES := $(APP_LIBXX_FILES)
 export PJ_INSTALL_DIR := /home/donyj/workspace/p2p_client/client/pjproject-2.3
 export PJ_INSTALL_INC_DIR := ${prefix}/include
 export PJ_INSTALL_LIB_DIR := ${exec_prefix}/lib
-export PJ_INSTALL_CFLAGS := -I$(PJ_INSTALL_INC_DIR) -DPJ_AUTOCONF=1	-O2 -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1 -DOPENSSL_NO_SSL2=1
+export PJ_INSTALL_CFLAGS := -I$(PJ_INSTALL_INC_DIR) -DPJ_AUTOCONF=1	-O2 -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1
 export PJ_INSTALL_CXXFLAGS := $(PJ_INSTALL_CFLAGS)
 export PJ_INSTALL_LDFLAGS := -L$(PJ_INSTALL_LIB_DIR) $(APP_LDLIBS)

@@ -30,7 +30,7 @@
 
 #define GUESS_MAX_RESPONSE_TIME (8)
 
-#define GUESS_MIN_TTL (12)
+#define GUESS_MIN_TTL (4)
 #define GUESS_MAX_TTL (64)
 
 //set port used, GUESS_MIN_PORT ~ GUESS_MAX_PORT, a port per bit
@@ -522,11 +522,14 @@ static void p2p_guess_timer(pj_timer_heap_t *th, pj_timer_entry *e)
 			p2p_guess_send_probe(guess);
 
 			//add PORT_GUESS_HOLE_ADD_COUNT holes per once timer
-			p2p_guess_create_holes(guess, PORT_GUESS_HOLE_ADD_COUNT);
+			if(guess->p2p_conn->is_initiative)
+				p2p_guess_create_holes(guess, PORT_GUESS_HOLE_ADD_COUNT);
 		}
 		else //failed to probe,close all holes socket
 		{
 			PJ_LOG(3, ("p2p_guess", "p2p_guess_timer failed to probe,close all holes socket"));
+
+			p2p_report_session_info(guess->p2p_conn, P2P_SESSION_OK, 0);
 
 			p2p_guess_close_all_holes(guess);
 		}
@@ -608,6 +611,7 @@ struct p2p_port_guess* p2p_create_port_guess(pj_sock_t sock,
 	guess->p2p_conn = p2p_conn;
 	guess->guess_times = 0;
 	guess->response_times = 0;
+	guess->guess_success = 0;
 
 	pj_timer_entry_init(&guess->timer, 0, guess, &p2p_guess_timer);
 
@@ -692,21 +696,28 @@ void p2p_port_guess_on_response(struct p2p_port_guess* guess,
 							   const pj_sockaddr_t *src_addr,
 							   unsigned src_addr_len)
 {
-	pj_sock_t sock = guess->sock;
+	pj_sock_t sock;
+	if(!guess || guess->guess_success)
+		return;
 
+	sock = guess->sock;
 	if(guess->valid_holes != -1)
 		sock = guess->holes[guess->valid_holes];
 
-	if(!guess)
-		return;
 	if(guess->valid_holes == -1 && !p2p_port_gess_data_valid(guess, buf, len))
 		return;
 	
 	pj_timer_heap_cancel_if_active(get_p2p_global()->timer_heap, &guess->timer, 0);
 
+	PJ_LOG(4,("p2p_guess", "p2p_port_guess_on_response %p OK, guess_success %d", guess, guess->guess_success));
+
+	guess->guess_success = 1;
+
 	//guess success, change p2p_tcp socket handle and remote address
 	if(guess->p2p_conn->is_initiative)
 	{
+		p2p_report_session_info(guess->p2p_conn, P2P_SESSION_OK, 1);
+
 		if(guess->p2p_conn->udt.p2p_udt_connector)
 			p2p_udt_connector_guess_port(guess->p2p_conn->udt.p2p_udt_connector, 
 				sock, src_addr, src_addr_len);

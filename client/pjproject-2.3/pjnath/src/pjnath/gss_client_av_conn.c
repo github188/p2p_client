@@ -309,14 +309,17 @@ P2P_DECL(int) gss_client_av_connect(gss_client_conn_cfg* cfg, void** transport)
 P2P_DECL(int) gss_client_av_send(void *transport, char* buf, int buffer_len, p2p_send_model model)
 {
 	gss_client_av_conn *conn = (gss_client_av_conn *)transport;
+	int result;
 	if(!conn)
 		return PJ_EINVAL;
 
 	check_pj_thread();
 
-	PJ_LOG(4,(conn->gssc->obj_name, "client_av_on_recv gss_client_av_send buffer_len %d", buffer_len));
+	//PJ_LOG(4,(conn->gssc->obj_name, "gss_client_av_send begin buffer_len %d", buffer_len));
+	result = gss_conn_send(conn->gssc, buf, buffer_len, NULL, 0, GSS_AV_DATA, model);
+	//PJ_LOG(4,(conn->gssc->obj_name, "gss_client_av_send end buffer_len %d", buffer_len));
 
-	return gss_conn_send(conn->gssc, buf, buffer_len, NULL, 0, GSS_AV_DATA, model);
+	return result;
 }
 
 //destroy client audio and video stream connection
@@ -349,15 +352,26 @@ P2P_DECL(void) gss_client_av_pause_recv(void* transport, int is_pause)
 P2P_DECL(void) gss_client_av_clean_buf(void* transport)
 {
 	gss_client_av_conn *conn = (gss_client_av_conn *)transport;
-	if(!conn)
-		return;
 
 	check_pj_thread();
 
+	if(!conn || !conn->gssc || conn->gssc->destroy_req)
+		return;
+
 	PJ_LOG(4,(conn->gssc->obj_name, "gss_client_av_clean_buf"));
 
+	pj_grp_lock_acquire(conn->gssc->grp_lock);
+
+	if (conn->gssc->destroy_req)
+	{ //already destroy, so return
+		pj_grp_lock_release(conn->gssc->grp_lock);
+		return;
+	}
+	
 	if(conn->smooth)
 		p2p_smooth_reset(conn->smooth);
 
 	conn->frame_len = 0;
+
+	pj_grp_lock_release(conn->gssc->grp_lock);
 }

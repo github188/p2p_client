@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.4.227"
+#define P2P_VERSION "1.4.330"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -20,14 +20,7 @@ static pj_status_t p2p_listener_udt_on_accept(void* user_data, void* udt_sock, p
 static pj_status_t p2p_listener_udt_send(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len);
 
 
-#define P2P_SESSION_OK 1
-#define P2P_FAILED_EXCHANGE_INFO -2
-#define P2P_DATA_CONNECT_SERVER -3
-#define P2P_CREATE_ICE_ERROR -4
-#define P2P_CREATE_UDT_ERROR -5
-#define P2P_FAILED_NEGO -6
-#define P2P_CONNECT_USER -7
-
+//return 1 is p2p no relay, 0 is p2p relay
 static int p2p_get_conn_type(pj_ice_strans_p2p_conn* conn)
 {
 	if(conn->local_addr_type < PJ_ICE_CAND_TYPE_RELAYED 
@@ -38,17 +31,19 @@ static int p2p_get_conn_type(pj_ice_strans_p2p_conn* conn)
 }
 
 //report session information to p2p server
-static void p2p_report_session_info(pj_ice_strans_p2p_conn* conn, int result)
+void p2p_report_session_info(pj_ice_strans_p2p_conn* conn, int result, unsigned char port_guess_ok)
 {
 	if(conn->is_initiative && conn->remote_user.slen != 0)
 	{
+		PJ_LOG(4,(conn->transport->obj_name, "p2p_report_session_info result %d,port_guess_ok %d", result, port_guess_ok));
+
 		pj_ice_report_session_info(conn->transport->assist_icest, 
 			&conn->remote_user,
 			&conn->connect_begin_time,
 			result,
 			conn->conn_id,
 			get_p2p_global()->client_guid + strlen(P2P_CLIENT_PREFIX),
-			p2p_get_conn_type(conn),
+			port_guess_ok ? 1 : p2p_get_conn_type(conn),
 			&conn->local_internet_addr,
 			&conn->remote_internet_addr);
 	}
@@ -69,7 +64,7 @@ static void p2p_transport_report_session_info(p2p_transport *transport, pj_int32
 	pj_grp_lock_release(transport->grp_lock);
 	if(conn)
 	{
-		p2p_report_session_info(conn, result);
+		p2p_report_session_info(conn, result, 0);
 		pj_grp_lock_dec_ref(conn->grp_lock);//***********************for multithreading, free reference
 	}
 }
@@ -130,7 +125,19 @@ static void p2p_conn_udt_on_connect(void* user_data, pj_bool_t success)
 		success));
 	
 	ice_cfg = pj_ice_strans_get_cfg(conn->icest);
-	p2p_report_session_info(conn, success ? P2P_SESSION_OK : P2P_CREATE_UDT_ERROR);
+
+	if(success)
+	{
+#ifdef USE_P2P_PORT_GUESS
+		if(!conn->port_guess)
+#endif
+			p2p_report_session_info(conn, P2P_SESSION_OK, 0);
+	}
+	else
+
+	{
+		p2p_report_session_info(conn, P2P_CREATE_UDT_ERROR, 0);
+	}
 	if( conn->transport->cb && conn->transport->cb->on_connect_complete)/*call back connect remote user result to application*/
 	{
 		(*conn->transport->cb->on_connect_complete)(conn->transport,
@@ -145,13 +152,32 @@ static void on_io_thread_udt_close(void* data)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)data;
 	if(!p2p_conn_is_valid(conn))
+	{
+		//add in p2p_conn_udt_on_close
+		pj_grp_lock_release(conn->grp_lock);
 		return;
+	}
 	on_ice_data_keep_alive(conn->icest, PJ_EGONE);
+	//add in p2p_conn_udt_on_close
+	pj_grp_lock_release(conn->grp_lock);
 }
 
-static void p2p_conn_udt_on_close(void* user_data)
+void p2p_conn_udt_on_close(void* user_data)
 {
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)user_data;
 	p2p_socket_pair_item item;
+	
+	if(!p2p_conn_is_valid(conn))
+		return;
+
+	if(conn->is_udt_close)
+		return;
+
+	//release in on_io_thread_udt_close
+	pj_grp_lock_add_ref(conn->grp_lock);
+
+	conn->is_udt_close = PJ_TRUE;
+
 	item.cb = on_io_thread_udt_close;
 	item.data = user_data;
 	schedule_socket_pair(get_p2p_global()->sock_pair, &item);
@@ -241,7 +267,7 @@ static void on_ice_data_nego_complete(pj_ice_strans *ice_st,
 			if(status != PJ_SUCCESS)
 			{
 				pj_ice_strans_cfg * ice_cfg = pj_ice_strans_get_cfg(ice_st);
-				p2p_report_session_info(conn, P2P_CREATE_UDT_ERROR);
+				p2p_report_session_info(conn, P2P_CREATE_UDT_ERROR, 0);
 				if( conn->transport->cb && conn->transport->cb->on_connect_complete)/*call back connect remote user result to application*/
 				{
 					(*conn->transport->cb->on_connect_complete)(conn->transport,
@@ -262,7 +288,7 @@ static void on_ice_data_nego_complete(pj_ice_strans *ice_st,
 	}
 	else
 	{
-		p2p_report_session_info(conn, P2P_FAILED_NEGO);
+		p2p_report_session_info(conn, P2P_FAILED_NEGO, 0);
 	}
 	
 	if(status != PJ_SUCCESS)
@@ -301,7 +327,7 @@ static void on_ice_data_init_complete(pj_ice_strans *ice_st,
 				if(status != PJ_SUCCESS)
 				{
 					PJ_LOG(4,(conn->transport->obj_name, "cb_on_ice_data_complete PJ_ICE_STRANS_OP_INIT failed, call back %d", status));
-					p2p_report_session_info(conn, P2P_CREATE_ICE_ERROR);
+					p2p_report_session_info(conn, P2P_CREATE_ICE_ERROR, 0);
 					if( conn->transport->cb && conn->transport->cb->on_connect_complete)
 					{
 						(*conn->transport->cb->on_connect_complete)(conn->transport,
@@ -320,7 +346,7 @@ static void on_ice_data_init_complete(pj_ice_strans *ice_st,
 	{
 		if(conn->is_initiative)
 		{
-			p2p_report_session_info(conn, P2P_DATA_CONNECT_SERVER);
+			p2p_report_session_info(conn, P2P_DATA_CONNECT_SERVER, 0);
 			if( conn->transport->cb && conn->transport->cb->on_connect_complete)
 			{
 				(*conn->transport->cb->on_connect_complete)(conn->transport,
@@ -398,7 +424,7 @@ static void cb_on_p2p_exchange_info(pj_ice_strans *ice_st, pj_status_t status)
 
 		PJ_LOG(4,(conn->transport->obj_name, "cb_on_p2p_exchange_info %p, id=%d, status=%d", conn->transport, conn->conn_id, status));
 		ice_cfg = pj_ice_strans_get_cfg(ice_st);
-		p2p_report_session_info(conn, P2P_FAILED_EXCHANGE_INFO);
+		p2p_report_session_info(conn, P2P_FAILED_EXCHANGE_INFO, 0);
 		if( conn->transport->cb && conn->transport->cb->on_connect_complete)
 		{
 			(*conn->transport->cb->on_connect_complete)(conn->transport,
@@ -717,6 +743,8 @@ static void on_p2p_connect(struct p2p_conn_arg* arg, pj_status_t status)
 	pj_grp_lock_release(arg->transport->grp_lock);
 	if(!conn)
 	{
+		PJ_LOG(3,("on_p2p_connect", "on_p2p_connect pj_hash_get return NULL"));
+
 		p2p_free(arg->remote_user);
 		p2p_free(arg);
 		return;
@@ -1308,13 +1336,17 @@ P2P_DECL(void) p2p_transport_destroy(p2p_transport *transport)
 
 	//if conn_hash_table is not empty,delay destroy
 	pj_grp_lock_acquire(transport->grp_lock);
-	if(pj_hash_count(transport->conn_hash_table))
+	if(!transport->udt_listener)
 	{
-		transport->delay_destroy = PJ_TRUE;
-		pj_grp_lock_release(transport->grp_lock);
-		PJ_LOG(4,(transport->obj_name, "p2p_transport_destroy %p delay destroy", transport));
-		return;
+		if(pj_hash_count(transport->conn_hash_table))
+		{
+			transport->delay_destroy = PJ_TRUE;
+			pj_grp_lock_release(transport->grp_lock);
+			PJ_LOG(4,(transport->obj_name, "p2p_transport_destroy %p delay destroy", transport));
+			return;
+		}
 	}
+
 	pj_grp_lock_release(transport->grp_lock);
 
 	p2p_transport_destroy_impl(transport);
@@ -1353,18 +1385,7 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 	arg->remote_user = (char*)p2p_malloc(user.slen+1);
 	pj_memcpy(arg->remote_user, user.ptr, user.slen);
 	arg->remote_user[user.slen] = '\0';
-
-	//call back is "on_p2p_connect"
-	status = pj_ice_strans_p2p_connnect(transport->assist_icest, &user, arg);
-	if (status != PJ_SUCCESS)
-	{
-		PJ_LOG(4,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect failed", transport));
-		*connection_id = 0;
-		p2p_free(arg->remote_user);
-		p2p_free(arg);
-		return status;
-	}
-
+	
 	*connection_id = arg->conn_id;
 	conn = create_p2p_conn(&transport->proxy_addr, PJ_TRUE);
 	pj_grp_lock_acquire(transport->grp_lock);
@@ -1385,6 +1406,17 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 		pj_hash_set(transport->pool, transport->conn_hash_table, connection_id, sizeof(pj_int32_t), hval, conn);
 	}
 	pj_grp_lock_release(transport->grp_lock);
+
+	//call back is "on_p2p_connect"
+	status = pj_ice_strans_p2p_connnect(transport->assist_icest, &user, arg);
+	if (status != PJ_SUCCESS)
+	{
+		PJ_LOG(4,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect failed", transport));
+		*connection_id = 0;
+		p2p_free(arg->remote_user);
+		p2p_free(arg);
+		return status;
+	}
 
 
 	PJ_LOG(3,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect conn_id %d remote_user %s end", transport, *connection_id, remote_user));

@@ -1,7 +1,7 @@
 #ifndef __PJNATH_P2P_PORT_GUESS_H__
 #define __PJNATH_P2P_PORT_GUESS_H__
 
-//#define USE_P2P_PORT_GUESS 1
+#define USE_P2P_PORT_GUESS 1
 
 #ifdef USE_P2P_PORT_GUESS
 
@@ -78,6 +78,8 @@ typedef struct p2p_port_guess
 	int total_holes;
 	//for receive p2p_tcp data,size is P2P_TCP_MSS
 	char* valid_hole_recv_buf; 
+
+	unsigned char guess_success;
 }p2p_port_guess;
 
 struct p2p_port_guess* p2p_create_port_guess(pj_sock_t sock, 

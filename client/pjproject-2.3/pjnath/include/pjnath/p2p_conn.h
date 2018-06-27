@@ -128,6 +128,7 @@ typedef struct pj_ice_strans_p2p_conn
 	//default PJ_FALSE, p2p_transport_disconnect set disconnect_req = PJ_TRUE
 	pj_bool_t disconnect_req;
 
+	pj_bool_t is_udt_close;
 }pj_ice_strans_p2p_conn;
 
 pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_add, pj_bool_t is_initiativer);
@@ -146,6 +147,19 @@ pj_status_t p2p_conn_set_opt(pj_ice_strans_p2p_conn* conn, p2p_opt opt, const vo
 pj_status_t p2p_conn_proxy_get_remote_addr(pj_ice_strans_p2p_conn* conn, unsigned short port, char* addr, int* add_len);
 
 void p2p_conn_wakeup_block_send(pj_ice_strans_p2p_conn* conn);
+
+//udt notify p2p connection closed
+void p2p_conn_udt_on_close(void* user_data);
+
+//report session information to p2p server
+#define P2P_SESSION_OK 1
+#define P2P_FAILED_EXCHANGE_INFO -2
+#define P2P_DATA_CONNECT_SERVER -3
+#define P2P_CREATE_ICE_ERROR -4
+#define P2P_CREATE_UDT_ERROR -5
+#define P2P_FAILED_NEGO -6
+#define P2P_CONNECT_USER -7
+void p2p_report_session_info(pj_ice_strans_p2p_conn* conn, int result, unsigned char port_guess_ok);
 
 PJ_END_DECL
 #endif

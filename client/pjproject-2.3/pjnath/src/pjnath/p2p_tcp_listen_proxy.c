@@ -529,6 +529,8 @@ PJ_DECL(pj_status_t) create_p2p_tcp_listen_proxy(pj_uint16_t remote_listen_port,
 		status = pj_sock_bind(listen_proxy->listen_sock_fd, &bound_addr, addr_len);
 		if(status != PJ_SUCCESS)
 		{
+			PJ_LOG(4,("p2p_tcp_l_p", "create_p2p_tcp_listen_proxy  pj_sock_bind return %d", status));
+
 			//rand bind a port, the port is listen proxy's unique id
 			status = pj_sockaddr_in_init(&bound_addr, NULL, 0);
 			if (status != PJ_SUCCESS) 
@@ -724,7 +726,7 @@ static void on_recved_p2p_data(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header
 	pj_uint32_t hval=0;
 	p2p_tcp_sock_proxy* sock;
 
-	PJ_LOG(5,("p2p_tcp_l_p", "on_recved_p2p_data %p %d %d", proxy, tcp_data->sock_id, tcp_data->data_length));
+	//PJ_LOG(4,("p2p_tcp_l_p", "on_recved_p2p_data %p %d %d", proxy, tcp_data->sock_id, tcp_data->data_length));
 
 	pj_grp_lock_acquire(proxy->grp_lock);
 	sock = pj_hash_get(proxy->tcp_sock_proxys, &tcp_data->sock_id, sizeof(pj_uint16_t), &hval) ;
@@ -760,8 +762,11 @@ static void on_recved_p2p_data(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header
 				if(status == PJ_SUCCESS)
 				{
 					PJ_LOG(5,("p2p_tcp_l_p", "on_recved_p2p_data sent %d", size));
-					free_p2p_tcp_data(data);
-					sock->p2p_send_data_first = sock->p2p_send_data_last = NULL;
+					if(sock->p2p_send_data_first) //maybe destroy_p2p_tcp_listen_proxy called in multi thread
+					{
+						free_p2p_tcp_data(data);
+						sock->p2p_send_data_first = sock->p2p_send_data_last = NULL;
+					}
 				}
 				else
 				{

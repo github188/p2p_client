@@ -607,6 +607,8 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 
 	if(!p2p_conn_is_valid(conn))
 		return;
+	if(conn->is_udt_close)
+		return;
 
 	//PJ_LOG(4,("p2p_conn", "on_p2p_conn_recved_data %d, recved_buffer_len %d", buffer_len, conn->recved_buffer_len ));
 
@@ -645,8 +647,11 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 					conn->recved_buffer_len = sizeof(p2p_tcp_proxy_header);
                     if(header->data_length > TCP_SOCK_PACKAGE_SIZE)
                     {
-                        PJ_LOG(4,("p2p_conn", "##### invalid data_length %d", header->data_length));
-                        return;
+                        PJ_LOG(2,("p2p_conn", "##### invalid data_length %d", header->data_length));
+						pj_mutex_unlock(conn->receive_mutex);
+
+						p2p_conn_udt_on_close(conn);
+					    return;
                     }
 				}
 			}
@@ -656,7 +661,9 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 			header = (p2p_tcp_proxy_header*)conn->recved_buffer;
             if(header->data_length > TCP_SOCK_PACKAGE_SIZE)
             {
-                PJ_LOG(4,("p2p_conn", "##### invalid data_length 2 %d", header->data_length));
+                PJ_LOG(2,("p2p_conn", "##### invalid data_length 2 %d", header->data_length));
+				pj_mutex_unlock(conn->receive_mutex);
+				p2p_conn_udt_on_close(conn);
                 return;
             }
 			if((conn->recved_buffer_len+remain) < (sizeof(p2p_tcp_proxy_header)+header->data_length))//not enough data length

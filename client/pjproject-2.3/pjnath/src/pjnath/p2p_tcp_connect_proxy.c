@@ -536,7 +536,7 @@ static void on_recved_p2p_data(p2p_tcp_connect_proxy* proxy, p2p_tcp_proxy_heade
 	p2p_tcp_connect_sock* sock;
 	pj_int32_t id = COMBINE_ID(tcp_data->listen_port, tcp_data->sock_id);
 
-	PJ_LOG(5,("p2p_tcp_c_p", "on_recved_p2p_data %p id=%d, len=%d", proxy, id, tcp_data->data_length));
+	//PJ_LOG(4,("p2p_tcp_c_p", "on_recved_p2p_data %p id=%d, len=%d", proxy, id, tcp_data->data_length));
 
 	pj_mutex_lock(proxy->sock_mutex);
 	sock = pj_hash_get(proxy->tcp_sock_proxys, &id, sizeof(pj_int32_t), &hval) ;
@@ -573,8 +573,11 @@ static void on_recved_p2p_data(p2p_tcp_connect_proxy* proxy, p2p_tcp_proxy_heade
 				if(status == PJ_SUCCESS)
 				{
 					PJ_LOG(5,("p2p_tcp_c_s", "on_recved_p2p_data sent %d", size));
-					free_p2p_tcp_data(data);
-					sock->p2p_send_data_first = sock->p2p_send_data_last = NULL;
+					if (sock->p2p_send_data_first) //maybe p2p_tcp_connect_sock_destroy called in multi thread
+					{
+						free_p2p_tcp_data(data);
+						sock->p2p_send_data_first = sock->p2p_send_data_last = NULL;
+					}
 				}
 				else
 				{
