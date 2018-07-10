@@ -237,12 +237,13 @@ PJ_DEF(const char*) pj_turn_state_name(pj_turn_state_t state)
 static void turn_session_on_recved_p2p_connect(pj_stun_session *stun, 
 											   pj_str_t* remote_user, 
 											   pj_int32_t conn_id,
-											   pj_int32_t conn_flag)
+											   pj_int32_t conn_flag,
+											   pj_int32_t internal_flag)
 {
 	pj_turn_session *sess ;
 	sess = (pj_turn_session*)pj_stun_session_get_user_data(stun);
 	if(sess->cb.on_recved_p2p_connect)
-		sess->cb.on_recved_p2p_connect(sess, remote_user, conn_id, conn_flag);
+		sess->cb.on_recved_p2p_connect(sess, remote_user, conn_id, conn_flag, internal_flag);
 }
 static void turn_session_on_p2p_disconnect(pj_stun_session *stun)
 {
@@ -2214,6 +2215,12 @@ PJ_DECL(pj_status_t) pj_turn_session_p2p_connnect(pj_turn_session *sess,
 		goto on_return;
 	}
 	status = pj_stun_msg_add_string_attr(tdata->pool, tdata->msg, PJ_STUN_ATTR_P2P_REMOTE_USER, remote_user);
+	if (status != PJ_SUCCESS) {
+		pj_stun_msg_destroy_tdata(sess->stun, tdata);
+		goto on_return;
+	}
+
+	status = pj_stun_msg_add_uint_attr(tdata->pool, tdata->msg, PJ_STUN_ATTR_PRIORITY, arg->internal_flag);
 	if (status != PJ_SUCCESS) {
 		pj_stun_msg_destroy_tdata(sess->stun, tdata);
 		goto on_return;

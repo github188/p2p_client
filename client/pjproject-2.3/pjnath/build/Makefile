@@ -45,7 +45,7 @@ export PJNATH_P2P_OBJS = p2p_dispatch.o p2p_dispatch.o p2p_conn.o p2p_global.o p
 		p2p_tcp_listen_proxy.o p2p_transport.o  p2p_udt.o p2p_upnp.o p2p_smooth.o p2p_port_guess.o\
 		socket_pair.o p2p_pool.o p2p_tcp.o rbtree.o gss_conn.o gss_dev_av_conn.o\
 		gss_dev_push_conn.o gss_dev_main_conn.o gss_client_pull_conn.o gss_client_av_conn.o \
-		gss_client_signaling_conn.o
+		gss_client_signaling_conn.o p2p_udp_proxy.o
 export PJNATH_UDT_OBJS = api.o buffer.o cache.o ccc.o channel.o common.o core.o \
 		epoll.o list.o md5.o packet.o queue.o StreamData.o window.o
 export PJNATH_OBJS += $(PJNATH_P2P_OBJS)

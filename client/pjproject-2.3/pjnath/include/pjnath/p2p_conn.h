@@ -6,6 +6,7 @@
 #include <pjnath/p2p_smooth.h>
 #include <pjnath/p2p_global.h>
 #include <pjnath/p2p_port_guess.h>
+#include <pjnath/p2p_udp_proxy.h>
 
 PJ_BEGIN_DECL
 
@@ -48,6 +49,9 @@ struct p2p_transport
 	pj_bool_t delay_destroy; /*if conn_hash_table is not empty, delay destroy p2p_transport*/
 };
 
+#define UDT_STATUS_NONE (0)
+#define UDT_STATUS_CONNECTED (1)
+#define UDT_STATUS_DISCONNECT (2)
 
 //p2p connection
 typedef struct pj_ice_strans_p2p_conn
@@ -66,7 +70,7 @@ typedef struct pj_ice_strans_p2p_conn
 
 	pj_bool_t		 destroy_req;//To prevent duplicate destroy
 
-	char recved_buffer[sizeof(p2p_tcp_proxy_header) + TCP_SOCK_PACKAGE_SIZE];/*remote tcp data buffer*/
+	char recved_buffer[sizeof(p2p_proxy_header) + PROXY_SOCK_PACKAGE_SIZE];/*remote tcp data buffer*/
 	size_t recved_buffer_len;
 
 	pj_sockaddr remote_addr; //p2p remote address
@@ -128,7 +132,15 @@ typedef struct pj_ice_strans_p2p_conn
 	//default PJ_FALSE, p2p_transport_disconnect set disconnect_req = PJ_TRUE
 	pj_bool_t disconnect_req;
 
-	pj_bool_t is_udt_close;
+	//
+	pj_uint8_t udt_status;
+
+#ifdef USE_UDP_PROXY
+	pj_hash_table_t* udp_listen_proxys;  /*udp connection hash table*/
+	//udp proxy in device
+	p2p_udp_connect_proxy udp_connect_proxy;
+#endif
+
 }pj_ice_strans_p2p_conn;
 
 pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_add, pj_bool_t is_initiativer);

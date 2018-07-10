@@ -214,7 +214,8 @@ static void ice_strans_p2p_exchange_info(pj_turn_sock *turn_sock,
 static void ice_strans_on_recved_p2p_connect(pj_turn_sock *turn_sock, 
 											 pj_str_t* remote_user, 
 											 pj_int32_t conn_id,
-											 pj_int32_t conn_flag)
+											 pj_int32_t conn_flag,
+											 pj_int32_t internal_flag)
 {
 	pj_ice_strans_comp *comp;
 	comp = (pj_ice_strans_comp*) pj_turn_sock_get_user_data(turn_sock);
@@ -223,7 +224,7 @@ static void ice_strans_on_recved_p2p_connect(pj_turn_sock *turn_sock,
 		return;
 	}
 
-	(*comp->ice_st->cb.on_recved_p2p_connect)(comp->ice_st->user_data, remote_user, conn_id, conn_flag);
+	(*comp->ice_st->cb.on_recved_p2p_connect)(comp->ice_st->user_data, remote_user, conn_id, conn_flag, internal_flag);
 }
 
 static pj_status_t ice_strans_on_p2p_disconnect(pj_turn_sock *turn_sock)

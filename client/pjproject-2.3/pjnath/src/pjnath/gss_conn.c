@@ -362,6 +362,8 @@ PJ_INLINE(p2p_tcp_data*)  gss_conn_malloc_send_data(char* buf, int buffer_len, c
 	int total_data_len = buffer_len + prefix_len;
 
 	data =  (p2p_tcp_data*)p2p_malloc(sizeof(p2p_tcp_data)+sizeof(GSS_DATA_HEADER)+total_data_len);
+	memset(data, 0, sizeof(p2p_tcp_data)+sizeof(GSS_DATA_HEADER)+total_data_len);
+
 	data->buffer = (char*)data + sizeof(p2p_tcp_data);
 	data->buffer_len = sizeof(GSS_DATA_HEADER)+total_data_len;
 	data->next = NULL;

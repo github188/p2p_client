@@ -231,7 +231,8 @@ typedef struct p2p_conn_arg
 	pj_int32_t conn_id;
 	void* user_data;
 	char* remote_user;
-	pj_int32_t conn_flag;
+	pj_int32_t conn_flag; //p2p_transport_connect or on_accept_remote_connection conn_flag parameter. user define connection flag
+	pj_int32_t internal_flag; // p2p internal flag, 1 bit is 0 use udp, 1 use tcp  
 }p2p_conn_arg;
 
 /**
@@ -314,7 +315,8 @@ typedef struct pj_turn_session_cb
 	void (*on_recved_p2p_connect)(pj_turn_session *sess,
 		pj_str_t* remote_user, 
 		pj_int32_t conn_id,
-		pj_int32_t conn_flag);
+		pj_int32_t conn_flag,
+		pj_int32_t internal_flag);
 
 	void (*on_p2p_exchange_info)(pj_turn_session *sess,
 		pj_str_t* remote_info,

@@ -53,7 +53,7 @@ static int	socket_pair(pj_sock_t fd[2])
 	int addr_len;
 	pj_status_t status;
 	pj_sockaddr_in listen_addr;
-	pj_str_t local_addr = pj_str("127.0.0.1");
+	pj_str_t local_addr = pj_str(LOCAL_HOST_IP);
 	do 
 	{
 		/*create socket and listen*/

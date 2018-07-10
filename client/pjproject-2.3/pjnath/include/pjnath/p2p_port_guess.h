@@ -1,6 +1,9 @@
 #ifndef __PJNATH_P2P_PORT_GUESS_H__
 #define __PJNATH_P2P_PORT_GUESS_H__
 
+#define GUESS_MIN_PORT (1024)
+#define GUESS_MAX_PORT (65535)
+
 #define USE_P2P_PORT_GUESS 1
 
 #ifdef USE_P2P_PORT_GUESS
@@ -16,8 +19,6 @@ PJ_BEGIN_DECL
 struct pj_ice_strans_p2p_conn;
 struct p2p_port_guess;
 
-#define GUESS_MIN_PORT (1024)
-#define GUESS_MAX_PORT (65535)
 
 #define PORT_BITS_COUNT ((65536-GUESS_MIN_PORT)/8)
 

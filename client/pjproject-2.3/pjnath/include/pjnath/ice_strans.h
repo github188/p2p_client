@@ -176,7 +176,8 @@ typedef struct pj_ice_strans_cb
 	void (*on_recved_p2p_connect)(void* user_data, 
 		pj_str_t* remote_user,
 		pj_int32_t conn_id,
-		pj_int32_t conn_flag);
+		pj_int32_t conn_flag,
+		pj_int32_t internal_flag);
 
 	void (*on_p2p_exchange_info)(pj_ice_strans *ice_st, 
 		pj_status_t status);

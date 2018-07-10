@@ -22,6 +22,8 @@ typedef struct p2p_delay_destroy_pool
 #define P2P_CLIENT_PASSWORD "p2ppassword"
 #define P2P_CLIENT_PREFIX "p2pc____"
 
+#define LOCAL_HOST_IP "127.0.0.1"
+
 typedef struct p2p_global
 {
 	pj_caching_pool	 caching_pool;
@@ -57,7 +59,9 @@ typedef struct p2p_global
 
 	int smooth_span ;//0 disable p2p smooth, min P2P_SMOOTH_MIN_SPAN ms,default P2P_SMOOTH_DEFAULT_SPAN ms
 
-	int enable_port_guess;
+	int enable_port_guess; //enable p2p_port_guess port guess,default 1
+
+	pj_uint16_t bind_port; //use the port to create pj_ice_strans_create
 }p2p_global;
 
 enum { MAX_P2P_BIND_RETRY = 32 };

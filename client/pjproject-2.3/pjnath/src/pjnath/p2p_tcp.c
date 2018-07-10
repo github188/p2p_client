@@ -1159,15 +1159,18 @@ static void p2p_tcp_zero_wnd_probe(pj_timer_heap_t *th, pj_timer_entry *e)
 static void p2p_tcp_send_heart(p2p_tcp_sock* sk)
 {
 	p2p_tcp_header h;
+
+	memset(&h, 0, sizeof(p2p_tcp_header));
+
 	h.type = P2P_TCP_TYPE_HEART;
-	h.seq = 0;
 	h.ack = sk->last_send_ack+1;
-	h.len = 0;
 	h.wnd_size = P2P_TCP_RECV_BUFFER_COUNT>sk->recved_user_data_count? P2P_TCP_RECV_BUFFER_COUNT - sk->recved_user_data_count : 0;
 	p2p_tcp_header_hton(&h);	
 	p2p_tcp_sendto_peer(sk, (const char*)&h, sizeof(p2p_tcp_header));
 
-	//PJ_LOG(4,("p2p_tcp", "p2p_tcp_check_heart send P2P_TCP_TYPE_HEART"));
+#ifdef P2P_TCP_DEBUG_LOG
+	PJ_LOG(4,("p2p_tcp", "p2p_tcp_send_heart send P2P_TCP_TYPE_HEART"));
+#endif
 }
 
 static void p2p_tcp_check_heart(pj_timer_heap_t *th, pj_timer_entry *e)
@@ -1179,6 +1182,12 @@ static void p2p_tcp_check_heart(pj_timer_heap_t *th, pj_timer_entry *e)
 	PJ_UNUSED_ARG(th);
 
 	pj_gettickcount(&now);
+	
+	
+#ifdef P2P_TCP_DEBUG_LOG
+	PJ_LOG(4,("p2p_tcp", "p2p_tcp_check_heart now %ld, last_recv_time %ld, last_send_time %ld", now.sec, sk->last_recv_time.sec, sk->last_send_time.sec));
+#endif
+
 	tcp_grp_lock_acquire(sk->grp_lock);
 	//check close timeout
 	if(now.sec - sk->last_recv_time.sec > P2P_TCP_CLOSE_TIMEOUT)
@@ -1531,7 +1540,7 @@ void p2p_tcp_data_recved(p2p_tcp_sock* sock, const void* buffer, int buffer_len)
 	if(sock == NULL || buffer_len <= 0)
 		return ;
 
-	//PJ_LOG(4,("p2p_tcp", "p2p_tcp_data_recved %p %d", sock, buffer_len));
+	//PJ_LOG(4,("p2p_tcp", "p2p_tcp_data_recved %p buffer_len %d recved_user_data_count %d", sock, buffer_len, sock->recved_user_data_count));
 
 	p2p_tcp_header_ntoh(header);
 
@@ -1572,6 +1581,9 @@ void p2p_tcp_data_recved(p2p_tcp_sock* sock, const void* buffer, int buffer_len)
 		break;
 
 	case P2P_TCP_TYPE_HEART: //nothing to do
+#ifdef P2P_TCP_DEBUG_LOG
+		PJ_LOG(4,("p2p_tcp", "p2p_tcp_data_recved P2P_TCP_TYPE_HEART"));
+#endif
 		break;
 	}
 
@@ -1588,7 +1600,7 @@ static void on_io_thread_tcp_no_resend(void* data)
 	pj_uint16_t len = snd_data->header.len;
 
 	p2p_tcp_header_hton(&snd_data->header);	
-	p2p_tcp_sendto(sock, (const char*)&snd_data->header, len+sizeof(p2p_tcp_header));
+	p2p_tcp_sendto_peer(sock, (const char*)&snd_data->header, len+sizeof(p2p_tcp_header));
 	p2p_free(snd_data);
 
 	pj_grp_lock_dec_ref(sock->grp_lock); //decrease reference, add in p2p_tcp_no_resend
@@ -1622,7 +1634,7 @@ pj_status_t p2p_tcp_no_resend(p2p_tcp_sock* sock, const void* buffer, int buffer
 	{
 		snd_data->next = NULL;
 		p2p_tcp_header_hton(&snd_data->header);	
-		p2p_tcp_sendto(sock, (const char*)&snd_data->header, buffer_len+sizeof(p2p_tcp_header));
+		p2p_tcp_sendto_peer(sock, (const char*)&snd_data->header, buffer_len+sizeof(p2p_tcp_header));
 		p2p_free(snd_data);
 	}
 	else //prevent deadlock, call on_io_thead_tcp_no_resend in io thread

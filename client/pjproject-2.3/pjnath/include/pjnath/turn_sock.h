@@ -105,7 +105,8 @@ typedef struct pj_turn_sock_cb
 	void (*on_recved_p2p_connect)(pj_turn_sock *turn_sock, 
 		pj_str_t* remote_user, 
 		pj_int32_t conn_id,
-		pj_int32_t conn_flag);
+		pj_int32_t conn_flag,
+		pj_int32_t internal_flag);
 
 	void (*on_p2p_exchange_info)(pj_turn_sock *turn_sock,
 		pj_str_t* remote_info,

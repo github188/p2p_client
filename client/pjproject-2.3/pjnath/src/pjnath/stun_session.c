@@ -1329,6 +1329,8 @@ static pj_status_t p2p_connect_respone(pj_stun_session *sess,
 	pj_stun_string_attr* remote_name_attr;
 	pj_stun_uint_attr* conn_id_attr;
 	pj_stun_uint_attr* conn_flag_attr;
+	pj_stun_uint_attr* internal_flag_attr;
+	pj_int32_t internal_flag = 0; // p2p internal flag, 1 bit is 0 use udp, 1 use tcp  
 
 	status = pj_stun_msg_create_response(tmp_pool, msg, 0, NULL, &response);
 	if(status != PJ_SUCCESS)
@@ -1347,6 +1349,10 @@ static pj_status_t p2p_connect_respone(pj_stun_session *sess,
 	if(conn_flag_attr == NULL)
 		return PJ_STUN_SC_BAD_REQUEST;
 
+	internal_flag_attr = (pj_stun_uint_attr*)pj_stun_msg_find_attr(msg, PJ_STUN_ATTR_PRIORITY, 0);
+	if(internal_flag_attr)
+		internal_flag = internal_flag_attr->value;
+
 	pj_stun_msg_add_string_attr(tmp_pool, response, PJ_STUN_ATTR_P2P_LOCAL_USER, &remote_name_attr->value);
 	pj_stun_msg_add_string_attr(tmp_pool, response, PJ_STUN_ATTR_P2P_REMOTE_USER, &local_name_attr->value);
 	pj_stun_msg_add_uint_attr(tmp_pool, response, PJ_STUN_ATTR_P2P_CONN_ID, conn_id_attr->value);
@@ -1355,7 +1361,7 @@ static pj_status_t p2p_connect_respone(pj_stun_session *sess,
 	status = send_response(sess, token, tmp_pool, response, 
 		NULL, PJ_FALSE, src_addr, src_addr_len);
 	if(sess->cb.on_recved_p2p_connect)
-		(*sess->cb.on_recved_p2p_connect)(sess, &local_name_attr->value, conn_id_attr->value, conn_flag_attr->value);
+		(*sess->cb.on_recved_p2p_connect)(sess, &local_name_attr->value, conn_id_attr->value, conn_flag_attr->value, internal_flag);
 	return status;
 }
 

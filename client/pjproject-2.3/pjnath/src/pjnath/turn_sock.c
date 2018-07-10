@@ -113,11 +113,12 @@ PJ_DEF(void) pj_turn_sock_cfg_default(pj_turn_sock_cfg *cfg)
 static void turn_sock_on_recved_p2p_connect(pj_turn_session *sess, 
 											pj_str_t* remote_user, 
 											pj_int32_t conn_id,
-											pj_int32_t conn_flag)
+											pj_int32_t conn_flag,
+											pj_int32_t internal_flag)
 {
 	pj_turn_sock *turn_sock = (pj_turn_sock*) pj_turn_session_get_user_data(sess);
 	if(turn_sock)
-		turn_sock->cb.on_recved_p2p_connect(turn_sock, remote_user, conn_id, conn_flag);
+		turn_sock->cb.on_recved_p2p_connect(turn_sock, remote_user, conn_id, conn_flag, internal_flag);
 }
 
 static void turn_sock_p2p_exchange_info(pj_turn_session *sess, 

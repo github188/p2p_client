@@ -312,7 +312,8 @@ typedef struct pj_stun_session_cb
 	void (*on_recved_p2p_connect)(pj_stun_session *sess,
 		pj_str_t* remote_user, 
 		pj_int32_t conn_id,
-		pj_int32_t conn_flag);
+		pj_int32_t conn_flag,
+		pj_int32_t internal_flag);
 
 	pj_status_t (*on_get_local_info)(pj_stun_session *sess,
 		char* remote_info,

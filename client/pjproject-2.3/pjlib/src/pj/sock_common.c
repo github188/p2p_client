@@ -1067,8 +1067,8 @@ PJ_DEF(pj_status_t) pj_sock_bind_random(  pj_sock_t sockfd,
     }
 
     for (; max_try; --max_try) {
-	pj_uint16_t port;
-	port = (pj_uint16_t)(base_port + pj_rand() % (port_range + 1));
+	pj_uint16_t port=base_port+max_try;
+	//port = (pj_uint16_t)(base_port + pj_rand() % (port_range + 1));
 	pj_sockaddr_set_port(&bind_addr, port);
 	status = pj_sock_bind(sockfd, &bind_addr, addr_len);
 	if (status == PJ_SUCCESS)

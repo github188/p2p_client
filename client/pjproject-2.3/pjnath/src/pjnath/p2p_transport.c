@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.4.330"
+#define P2P_VERSION "1.5.000"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -13,6 +13,8 @@
 #ifdef WIN32
 #define UDP_RECV_BUF_SIZE (65536)
 #endif
+
+#define INTERNAL_FLAG_TCP (1)
 
 static void on_ice_data_keep_alive(pj_ice_strans *ice_st, pj_status_t status);
 static void p2p_listener_get_sock_addr(pj_sockaddr_t* addr, void* user_data);
@@ -132,9 +134,10 @@ static void p2p_conn_udt_on_connect(void* user_data, pj_bool_t success)
 		if(!conn->port_guess)
 #endif
 			p2p_report_session_info(conn, P2P_SESSION_OK, 0);
+
+		conn->udt_status = UDT_STATUS_CONNECTED;
 	}
 	else
-
 	{
 		p2p_report_session_info(conn, P2P_CREATE_UDT_ERROR, 0);
 	}
@@ -170,13 +173,13 @@ void p2p_conn_udt_on_close(void* user_data)
 	if(!p2p_conn_is_valid(conn))
 		return;
 
-	if(conn->is_udt_close)
+	if(conn->udt_status == UDT_STATUS_DISCONNECT)
 		return;
 
 	//release in on_io_thread_udt_close
 	pj_grp_lock_add_ref(conn->grp_lock);
 
-	conn->is_udt_close = PJ_TRUE;
+	conn->udt_status = UDT_STATUS_DISCONNECT;
 
 	item.cb = on_io_thread_udt_close;
 	item.data = user_data;
@@ -539,7 +542,7 @@ static pj_status_t create_initiative_data_icest(p2p_transport *p2p, void* user_d
 	pj_ice_strans_p2p_conn* conn;
 	pj_bool_t destroy_ice = PJ_TRUE;
 
-	PJ_LOG(4,(p2p->obj_name, "create_initiative_data_icest %p, start %p %s %d", p2p, user_data, remote_user->ptr, conn_id));
+	PJ_LOG(4,(p2p->obj_name, "create_initiative_data_icest %p, start %p %.*s %d", p2p, user_data,remote_user->slen, remote_user->ptr, conn_id));
 
 	pj_grp_lock_acquire(p2p->grp_lock);
 	conn  = pj_hash_get(p2p->conn_hash_table, &conn_id, sizeof(pj_int32_t), &hval);
@@ -636,7 +639,7 @@ pj_bool_t passivity_icest_exist(p2p_transport *p2p, pj_str_t* remote_user, pj_in
 	return exist;
 }
 
-static pj_status_t create_passivity_data_icest(p2p_transport *p2p, void* user_data, pj_str_t* remote_user, pj_int32_t conn_id, pj_int32_t conn_flag)
+static pj_status_t create_passivity_data_icest(p2p_transport *p2p, void* user_data, pj_str_t* remote_user, pj_int32_t conn_id, pj_int32_t conn_flag, pj_int32_t internal_flag)
 {
 	pj_status_t status;
 	pj_ice_strans_cfg ice_cfg;
@@ -648,10 +651,11 @@ static pj_status_t create_passivity_data_icest(p2p_transport *p2p, void* user_da
 	pj_ice_strans_p2p_conn* conn;
 	pj_bool_t seted = PJ_FALSE;
 
+
 	if(passivity_icest_exist(p2p, remote_user, conn_id))
 		return PJ_SUCCESS;
 
-	PJ_LOG(4,(p2p->obj_name, "create_passivity_data_icest %p, start %p %s %d", p2p, user_data, remote_user->ptr, conn_id));
+	PJ_LOG(4,(p2p->obj_name, "create_passivity_data_icest %p, start %p %.*s %d", p2p, user_data, remote_user->slen, remote_user->ptr, conn_id));
 
 	//create temp memory pool for alloc pj_ice_strans_cfg
 	tmp_pool = pj_pool_create(&get_p2p_global()->caching_pool.factory, 
@@ -665,12 +669,15 @@ static pj_status_t create_passivity_data_icest(p2p_transport *p2p, void* user_da
 	
 	ice_cfg.stun.server = ice_cfg.turn.server;
 	ice_cfg.stun.port = ice_cfg.turn.port;
+	ice_cfg.stun.max_host_cands = 64;
+
 	ice_cfg.turn.alloc_param.is_initiative = PJ_FALSE;
 	ice_cfg.turn.alloc_param.is_assist = PJ_FALSE;
 	ice_cfg.turn.alloc_param.conn_id = conn_id;
 	ice_cfg.turn.alloc_param.user_data = user_data;
-	ice_cfg.stun.max_host_cands = 64;
 	pj_strdup_with_null(tmp_pool, &ice_cfg.turn.alloc_param.remote_user, remote_user);
+	if(ice_cfg.turn.conn_type == PJ_TURN_TP_UDP && (internal_flag & INTERNAL_FLAG_TCP))
+		ice_cfg.turn.conn_type = PJ_TURN_TP_TCP;
 
 	/* init the callback */
 	pj_bzero(&icecb, sizeof(icecb));
@@ -794,12 +801,12 @@ static void on_p2p_connect(struct p2p_conn_arg* arg, pj_status_t status)
 }
 
 //received a remote connect request
-static void on_recved_p2p_connect(void* user_data, pj_str_t* remote_user, pj_int32_t conn_id, pj_int32_t conn_flag)
+static void on_recved_p2p_connect(void* user_data, pj_str_t* remote_user, pj_int32_t conn_id, pj_int32_t conn_flag, pj_int32_t internal_flag)
 {
 	p2p_transport *p2p = (p2p_transport*)user_data;
-	PJ_LOG(4,(p2p->obj_name, "on_recved_p2p_connect %p, start %s %d", p2p, remote_user->ptr, conn_id));
+	PJ_LOG(4,(p2p->obj_name, "on_recved_p2p_connect %p, start %.*s %d", p2p, remote_user->slen, remote_user->ptr, conn_id));
 	
-	create_passivity_data_icest(p2p, 0, remote_user, conn_id, conn_flag);
+	create_passivity_data_icest(p2p, 0, remote_user, conn_id, conn_flag, internal_flag);
 
 	if(p2p->udt_listener == NULL)
 	{
@@ -890,7 +897,7 @@ static pj_status_t create_assist_icest(p2p_transport *p2p, p2p_transport_cfg* cf
 	char* server;
 	char seps[] = "\n";
 	char *token = 0;
-
+	enum { MAX_BIND_RETRY = 100 };
 	/* Init our ICE settings with null values */
 	pj_ice_strans_cfg_default(&ice_cfg);
 
@@ -913,6 +920,11 @@ static pj_status_t create_assist_icest(p2p_transport *p2p, p2p_transport_cfg* cf
 	ice_cfg.turn.port = cfg->port;
 	ice_cfg.stun_cfg.ioqueue = get_p2p_global()->ioqueue;
 	ice_cfg.stun_cfg.timer_heap = get_p2p_global()->timer_heap;
+	ice_cfg.stun.max_host_cands = 0 ;
+	pj_sockaddr_init(ice_cfg.af, &ice_cfg.stun.cfg.bound_addr, NULL, get_p2p_global()->bind_port);
+	ice_cfg.stun.cfg.port_range = MAX_BIND_RETRY;
+
+
 	/* TURN credential */
 	ice_cfg.turn.auth_cred.type = PJ_STUN_AUTH_CRED_STATIC;
 	pj_strdup2_with_null(p2p->pool, &ice_cfg.turn.auth_cred.data.static_cred.username, cfg->user);
@@ -927,7 +939,8 @@ static pj_status_t create_assist_icest(p2p_transport *p2p, p2p_transport_cfg* cf
 
 	ice_cfg.turn.alloc_param.ka_interval = KA_INTERVAL;
 	ice_cfg.turn.alloc_param.is_assist = PJ_TRUE;
-	ice_cfg.stun.max_host_cands = 0 ;
+	pj_sockaddr_init(ice_cfg.af, &ice_cfg.turn.cfg.bound_addr, NULL, get_p2p_global()->bind_port+1);
+	ice_cfg.turn.cfg.port_range = MAX_BIND_RETRY;
 
 	/* init the callback */
 	pj_bzero(&icecb, sizeof(icecb));
@@ -1169,6 +1182,8 @@ pj_status_t p2p_listener_udt_on_accept(void* user_data, void* udt_sock, pj_socka
 	{	
 		p2p_udt_cb udt_cb;
 		pj_sock_t sock;
+
+		conn->udt_status = UDT_STATUS_CONNECTED;
 		
 		pj_ice_get_udt_socket(conn->icest, &sock);
 
@@ -1224,10 +1239,17 @@ void check_pj_thread()
 {
 	if(!pj_thread_is_registered())
 	{
-		pj_thread_desc* thread_desc = malloc(sizeof(pj_thread_desc));//the memory will leak,
+		pj_thread_desc* thread_desc = p2p_malloc(sizeof(pj_thread_desc));
 		pj_thread_t *thread;
 		pj_thread_register("thr%p", *thread_desc, &thread);
 	}
+}
+
+P2P_DECL(void) p2p_thread_unregister()
+{
+	pj_thread_t* thread = pj_thread_this();
+	if(thread)
+		p2p_free(thread);
 }
 
 P2P_DECL(int) p2p_transport_create(p2p_transport_cfg* cfg,
@@ -1236,7 +1258,7 @@ P2P_DECL(int) p2p_transport_create(p2p_transport_cfg* cfg,
 	pj_status_t status;
 	pj_pool_t *pool;
 	p2p_transport *p2p;
-	pj_str_t local_addr = pj_str("127.0.0.1");
+	pj_str_t local_addr = pj_str(LOCAL_HOST_IP);
 	char guid[256];
 	if(cfg == 0 || transport == 0 || cfg->server == 0 
 		|| ((cfg->user == 0 || cfg->password == 0) && cfg->terminal_type == P2P_DEVICE_TERMINAL) )
@@ -1364,6 +1386,8 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 	pj_str_t user = pj_str((char*)remote_user);
 	pj_ice_strans_p2p_conn* conn;
 	pj_uint32_t hval=0;
+	pj_ice_strans_cfg * ice_cfg = 0;
+
 
 	check_pj_thread();
 
@@ -1385,6 +1409,11 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 	arg->remote_user = (char*)p2p_malloc(user.slen+1);
 	pj_memcpy(arg->remote_user, user.ptr, user.slen);
 	arg->remote_user[user.slen] = '\0';
+	arg->internal_flag = 0;
+	ice_cfg = pj_ice_strans_get_cfg(transport->assist_icest);
+	if(ice_cfg && ice_cfg->turn.conn_type == PJ_TURN_TP_TCP)
+		arg->internal_flag |= INTERNAL_FLAG_TCP;
+			
 	
 	*connection_id = arg->conn_id;
 	conn = create_p2p_conn(&transport->proxy_addr, PJ_TRUE);
@@ -1436,9 +1465,6 @@ P2P_DECL(void) p2p_transport_disconnect(p2p_transport *transport, int connection
 	check_pj_thread();
 
 	PJ_LOG(3,(transport->obj_name, "pj_p2p_transport_disconnect %p conn_id %d", transport, connection_id));
-	//schedule a timer,put it in io network thread 
-	item = p2p_malloc(sizeof(p2p_disconnection_id)); 
-	item->conn_id = connection_id;
 
 	pj_grp_lock_acquire(transport->grp_lock);
 
@@ -1447,6 +1473,10 @@ P2P_DECL(void) p2p_transport_disconnect(p2p_transport *transport, int connection
 	{
 		if(!conn->disconnect_req)
 		{
+			//schedule a timer,put it in io network thread 
+			item = p2p_malloc(sizeof(p2p_disconnection_id)); 
+			item->conn_id = connection_id;
+
 			conn->disconnect_req = PJ_TRUE;
 
 			pj_list_push_back(&transport->disconnect_conns, item);
@@ -1651,7 +1681,7 @@ P2P_DECL(int) p2p_transport_send(p2p_transport *transport,
 	return p2p_transport_type_send(transport, connection_id, buffer, len, model, P2P_DATA_COMMON, error_code);	
 }
 
-pj_status_t listen_proxy_send_data(p2p_tcp_listen_proxy* listen_proxy,
+static pj_status_t tcp_listen_proxy_send_data(p2p_tcp_listen_proxy* listen_proxy,
 							 const char* buffer,
 							 size_t buffer_len)
 {
@@ -1663,6 +1693,28 @@ pj_status_t listen_proxy_send_data(p2p_tcp_listen_proxy* listen_proxy,
 	}
 	return status;
 }
+
+#ifdef USE_UDP_PROXY
+static pj_status_t udp_listen_proxy_send_data(p2p_udp_listen_proxy* listen_proxy,
+											  const char* buffer,
+											  size_t buffer_len)
+{
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)listen_proxy->user_data;
+	pj_status_t status = PJ_EGONE;
+	if(conn->udt.p2p_udt_connector)
+	{
+		status = p2p_udt_connector_send(conn->udt.p2p_udt_connector, buffer, buffer_len);
+	}
+	return status;
+}
+
+static void udp_listen_proxy_idea_timeout(p2p_udp_listen_proxy* listen_proxy)
+{
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)listen_proxy->user_data;
+	p2p_destroy_udp_proxy(conn->transport, conn->conn_id, listen_proxy->proxy_port);
+}
+#endif
+
 
 P2P_DECL(int) p2p_create_tcp_proxy(p2p_transport *transport, 
 								   int connection_id, 
@@ -1690,7 +1742,8 @@ P2P_DECL(int) p2p_create_tcp_proxy(p2p_transport *transport,
 	if(conn)
 	{
 		p2p_tcp_listen_proxy_cb cb;
-		cb.send_tcp_data = listen_proxy_send_data;
+		cb.send_tcp_data = tcp_listen_proxy_send_data;
+
 		status = create_p2p_tcp_listen_proxy(remote_listen_port, &cb, conn, &proxy);
 		if(status == PJ_SUCCESS)
 		{
@@ -1743,6 +1796,115 @@ P2P_DECL(void) p2p_destroy_tcp_proxy(p2p_transport *transport,
 			pj_grp_lock_dec_ref(conn->grp_lock);//----*********** when listen proxy created,add conn reference,so release it
 		}
 	}
+}
+
+P2P_DECL(int) p2p_create_udp_proxy(p2p_transport *transport, 
+								   int connection_id, 
+								   unsigned short remote_udp_port,
+								   unsigned short* local_proxy_port)
+{
+#ifdef USE_UDP_PROXY
+	pj_uint32_t hval=0;
+	pj_ice_strans_p2p_conn* conn;
+	p2p_udp_listen_proxy* proxy;
+	pj_status_t status = PJ_SUCCESS;
+	if(transport == 0)
+		return PJ_EINVAL;
+	if(!transport->connected)
+		return PJ_EINVALIDOP;
+
+	check_pj_thread();
+
+	pj_grp_lock_acquire(transport->grp_lock);
+	conn  = pj_hash_get(transport->conn_hash_table, &connection_id, sizeof(pj_int32_t), &hval);
+	if(conn && conn->is_initiative)//*************************for multithreading, so add reference
+		pj_grp_lock_add_ref(conn->grp_lock);
+	else
+		status = PJ_EGONE;
+	pj_grp_lock_release(transport->grp_lock);
+	if(conn)
+	{
+		p2p_udp_listen_proxy_cb cb;
+		cb.send_udp_data = udp_listen_proxy_send_data;
+		cb.on_idea_timeout = udp_listen_proxy_idea_timeout;
+		status = create_p2p_udp_listen_proxy(remote_udp_port, &cb, conn, &proxy);
+		if(status == PJ_SUCCESS)
+		{
+			*local_proxy_port = proxy->proxy_port;
+			hval = 0;
+			pj_grp_lock_acquire(conn->grp_lock);
+			if (pj_hash_get(conn->udp_listen_proxys, &proxy->remote_udp_port, sizeof(pj_uint16_t),	&hval) == NULL) 
+			{		
+				pj_hash_set(conn->pool, conn->udp_listen_proxys, &proxy->remote_udp_port, sizeof(pj_uint16_t), hval, proxy);
+				pj_grp_lock_add_ref(conn->grp_lock); //----***********release it in pj_p2p_destroy_udp_proxy
+				proxy->hash_value = hval;
+			}
+			pj_grp_lock_release(conn->grp_lock);
+		}
+		pj_grp_lock_dec_ref(conn->grp_lock);//***********************for multithreading, free reference
+	}
+	return status;
+#else
+	PJ_UNUSED_ARG(transport);
+	PJ_UNUSED_ARG(connection_id);
+	PJ_UNUSED_ARG(remote_udp_port);
+	PJ_UNUSED_ARG(local_proxy_port);
+	return PJ_ENOTSUP;
+#endif
+}
+
+P2P_DECL(void) p2p_destroy_udp_proxy(p2p_transport *transport,
+									 int connection_id,
+									 unsigned short local_proxy_port)
+{
+#ifdef USE_UDP_PROXY
+	pj_uint32_t hval=0;
+	pj_ice_strans_p2p_conn* conn;
+	
+	if(transport == 0 || !transport->connected)
+		return;
+
+	check_pj_thread();
+
+	pj_grp_lock_acquire(transport->grp_lock);
+	conn  = pj_hash_get(transport->conn_hash_table, &connection_id, sizeof(pj_int32_t), &hval);
+	if(conn) //*************************for multithreading, so add reference
+		pj_grp_lock_add_ref(conn->grp_lock);
+	pj_grp_lock_release(transport->grp_lock);
+	if(conn)
+	{
+		p2p_udp_listen_proxy* proxy = NULL;
+		pj_hash_iterator_t itbuf, *it;
+
+		pj_grp_lock_acquire(conn->grp_lock);
+
+		it = pj_hash_first(conn->udp_listen_proxys, &itbuf);
+		while(it) 
+		{
+			p2p_udp_listen_proxy* p = (p2p_udp_listen_proxy*)pj_hash_this(conn->udp_listen_proxys, it);
+			if(p->proxy_port == local_proxy_port)
+			{
+				proxy = p;
+				pj_hash_set(NULL, conn->udp_listen_proxys, &proxy->remote_udp_port, sizeof(pj_uint16_t), proxy->hash_value, NULL);
+				break;
+			}			
+			it = pj_hash_next(conn->udp_listen_proxys, it);
+		}
+		
+		pj_grp_lock_dec_ref(conn->grp_lock);//***********************for multithreading, free reference
+		pj_grp_lock_release(conn->grp_lock);
+
+		if(proxy)
+		{
+			destroy_p2p_udp_listen_proxy(proxy);
+			pj_grp_lock_dec_ref(conn->grp_lock);//----*********** when listen proxy created,add conn reference,so release it
+		}
+	}
+#else
+	PJ_UNUSED_ARG(transport);
+	PJ_UNUSED_ARG(connection_id);
+	PJ_UNUSED_ARG(local_proxy_port);
+#endif
 }
 
 P2P_DECL(void) p2p_strerror(int error_code,

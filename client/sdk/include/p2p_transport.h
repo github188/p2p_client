@@ -160,6 +160,15 @@ P2P_DECL(void) p2p_destroy_tcp_proxy(p2p_transport *transport,
 									int connection_id,
 									unsigned short local_proxy_port);
 
+P2P_DECL(int) p2p_create_udp_proxy(p2p_transport *transport, 
+								   int connection_id, 
+								   unsigned short remote_udp_port,
+								   unsigned short* local_proxy_port);
+
+P2P_DECL(void) p2p_destroy_udp_proxy(p2p_transport *transport,
+									 int connection_id,
+									 unsigned short local_proxy_port);
+
 P2P_DECL(void) p2p_strerror(int error_code,
 						   char *buf,
 						   int bufsize);
@@ -183,9 +192,12 @@ typedef enum p2p_global_opt
 	P2P_ONLY_RELAY, //p2p disable HOST SRFLX PRFLX, only enable relay, default 0 , 1 only relay
 	P2P_SMOOTH_SPAN, //0 disable p2p smooth, min P2P_SMOOTH_MIN_SPAN ms,default P2P_SMOOTH_DEFAULT_SPAN
 	P2P_PORT_GUESS, // 0 disable, 1 enable,default enable
+	P2P_BIND_PORT, //bind port ,default rand of 1024~65535
 }p2p_global_opt;
 
 P2P_DECL(int) p2p_set_global_opt(p2p_global_opt opt, const void* optval, int optlen);
+
+P2P_DECL(void) p2p_thread_unregister();
 
 #ifdef __cplusplus /*extern "C"*/
 }

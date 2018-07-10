@@ -66,7 +66,7 @@ static void p2p_conn_on_destroy(void *obj)
 	PJ_LOG(4,("pj_ice_s_p2p_c", "pj_ice_strans_p2p_conn %p destroyed end", obj));
 }
 
-pj_status_t connect_proxy_send_tcp_data(p2p_tcp_connect_proxy* connect_proxy,
+static pj_status_t connect_proxy_send_tcp_data(p2p_tcp_connect_proxy* connect_proxy,
 										const char* buffer,
 										size_t buffer_len)
 {
@@ -80,17 +80,46 @@ pj_status_t connect_proxy_send_tcp_data(p2p_tcp_connect_proxy* connect_proxy,
 	return status;
 }
 
-static void add_p2p_conn_ref(p2p_tcp_connect_proxy* proxy)
+static void add_tcp_proxy_ref(p2p_tcp_connect_proxy* proxy)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)proxy->user_data;
 	pj_grp_lock_add_ref(conn->grp_lock);
 }
 
-static void release_p2p_conn_ref(p2p_tcp_connect_proxy* proxy)
+static void release_tcp_proxy_ref(p2p_tcp_connect_proxy* proxy)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)proxy->user_data;
 	pj_grp_lock_dec_ref(conn->grp_lock);
 }
+
+#ifdef USE_UDP_PROXY
+static pj_status_t connect_proxy_send_udp_data(p2p_udp_connect_proxy* connect_proxy,
+											   const char* buffer,
+											   size_t buffer_len)
+{
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)connect_proxy->user_data;
+	pj_status_t status = PJ_EGONE;
+	if(conn->udt.p2p_udt_accepter)
+	{
+		status = p2p_udt_accepter_send(conn->udt.p2p_udt_accepter, buffer, buffer_len);
+	}
+
+	return status;
+}
+
+static void add_udp_proxy_ref(p2p_udp_connect_proxy* proxy)
+{
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)proxy->user_data;
+	pj_grp_lock_add_ref(conn->grp_lock);
+}
+
+static void release_udp_proxy_ref(p2p_udp_connect_proxy* proxy)
+{
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)proxy->user_data;
+	pj_grp_lock_dec_ref(conn->grp_lock);
+}
+
+#endif
 
 static void on_tcp_proxy_connected(p2p_tcp_connect_proxy* proxy, unsigned short port)
 {
@@ -260,7 +289,12 @@ pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initi
 {
 	pj_pool_t *pool;
 	pj_ice_strans_p2p_conn* conn;
-	p2p_tcp_connect_proxy_cb cb;
+	p2p_tcp_connect_proxy_cb tcp_proxy_cb;
+
+#ifdef USE_UDP_PROXY
+	p2p_udp_connect_proxy_cb udp_proxy_cb;
+#endif
+	
 
 	pool = pj_pool_create(&get_p2p_global()->caching_pool.factory, 
 		"p2p_conn%p", 
@@ -275,10 +309,14 @@ pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initi
 	conn->send_buf_size = P2P_SEND_BUFFER_SIZE;
 	conn->tcp_listen_proxys = pj_hash_create(pool, LISTEN_HASH_TABLE_SIZE);
 
-	conn->user_data_buf = p2p_malloc(TCP_SOCK_PACKAGE_SIZE);
+#ifdef USE_UDP_PROXY
+	conn->udp_listen_proxys = pj_hash_create(pool, LISTEN_HASH_TABLE_SIZE);
+#endif
+
+	conn->user_data_buf = p2p_malloc(PROXY_SOCK_PACKAGE_SIZE);
 	conn->user_data_len = 0;
 	conn->user_data_pkg_seq = 0;
-	conn->user_data_capacity = TCP_SOCK_PACKAGE_SIZE;
+	conn->user_data_capacity = PROXY_SOCK_PACKAGE_SIZE;
 
 	if(get_p2p_global()->smooth_span > 0 && is_initiative)
 		conn->smooth = p2p_create_smooth(p2p_smooth_callback , conn);
@@ -286,11 +324,18 @@ pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initi
 	pj_mutex_create_recursive(pool, NULL, &conn->send_mutex);
 	pj_mutex_create_recursive(pool, NULL, &conn->receive_mutex);
 
-	cb.send_tcp_data = &connect_proxy_send_tcp_data;
-	cb.add_ref = &add_p2p_conn_ref;
-	cb.release_ref = &release_p2p_conn_ref;
-	cb.on_tcp_connected = &on_tcp_proxy_connected;
-	init_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy, proxy_addr, pool, &cb, conn);
+	tcp_proxy_cb.send_tcp_data = &connect_proxy_send_tcp_data;
+	tcp_proxy_cb.add_ref = &add_tcp_proxy_ref;
+	tcp_proxy_cb.release_ref = &release_tcp_proxy_ref;
+	tcp_proxy_cb.on_tcp_connected = &on_tcp_proxy_connected;
+	init_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy, proxy_addr, pool, &tcp_proxy_cb, conn);
+
+#ifdef USE_UDP_PROXY
+	udp_proxy_cb.send_udp_data = &connect_proxy_send_udp_data;
+	udp_proxy_cb.add_ref = &add_udp_proxy_ref;
+	udp_proxy_cb.release_ref = &release_udp_proxy_ref;
+	init_p2p_udp_connect_proxy(&conn->udp_connect_proxy, proxy_addr, pool, &udp_proxy_cb, conn);
+#endif
 
 	pj_grp_lock_create(conn->pool, NULL, &conn->grp_lock);
 
@@ -321,12 +366,16 @@ void async_destroy_p2p_conn(void *user_data)
 }
 void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn)
 {
-	p2p_tcp_listen_proxy** p2p_proxy = NULL;
-	unsigned proxy_count = 0;
+	p2p_tcp_listen_proxy** tcp_proxy = NULL;
+	unsigned tcp_proxy_count = 0;
 	pj_hash_iterator_t itbuf, *it;
 	unsigned i;
 	pj_ice_strans *icest = NULL;
 	//pj_time_val delay = {5, 0};
+#ifdef USE_UDP_PROXY
+	p2p_udp_listen_proxy** udp_proxy = NULL;
+	unsigned udp_proxy_count = 0;
+#endif
 
 	PJ_LOG(4,("pj_ice_s_p2p_c", "destroy_p2p_conn %p", conn));
 
@@ -340,11 +389,11 @@ void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn)
 	conn->destroy_req = PJ_TRUE;
 
 	//prevent deadlock, get items in hash table, then clean hash table
-	proxy_count = pj_hash_count(conn->tcp_listen_proxys);
-	if(proxy_count)
+	tcp_proxy_count = pj_hash_count(conn->tcp_listen_proxys);
+	if(tcp_proxy_count)
 	{
 		p2p_tcp_listen_proxy** proxy;
-		p2p_proxy = proxy = (p2p_tcp_listen_proxy**)p2p_malloc(sizeof(p2p_tcp_listen_proxy*)*proxy_count);
+		tcp_proxy = proxy = (p2p_tcp_listen_proxy**)p2p_malloc(sizeof(p2p_tcp_listen_proxy*)*tcp_proxy_count);
 		it = pj_hash_first(conn->tcp_listen_proxys, &itbuf);
 		while (it) 
 		{
@@ -355,6 +404,24 @@ void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn)
 			proxy++;
 		}
 	}
+
+#ifdef USE_UDP_PROXY
+	udp_proxy_count = pj_hash_count(conn->udp_listen_proxys);
+	if(udp_proxy_count)
+	{
+		p2p_udp_listen_proxy** proxy;
+		udp_proxy = proxy = (p2p_udp_listen_proxy**)p2p_malloc(sizeof(p2p_udp_listen_proxy*)*udp_proxy_count);
+		it = pj_hash_first(conn->udp_listen_proxys, &itbuf);
+		while (it) 
+		{
+			*proxy = (p2p_udp_listen_proxy*) pj_hash_this(conn->udp_listen_proxys, it);
+			//use pj_hash_set NULL, remove from hash table
+			pj_hash_set(NULL, conn->udp_listen_proxys, &(*proxy)->remote_udp_port, sizeof(pj_uint16_t), (*proxy)->hash_value, NULL);
+			it = pj_hash_first(conn->udp_listen_proxys, &itbuf);
+			proxy++;
+		}
+	}
+#endif
 
 	icest = conn->icest;
 	conn->icest = NULL;
@@ -398,14 +465,27 @@ void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn)
 
 	uninit_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy);
 
-	for(i=0; i<proxy_count; i++)
+	for(i=0; i<tcp_proxy_count; i++)
 	{
-		destroy_p2p_tcp_listen_proxy(p2p_proxy[i]);
-		pj_grp_lock_dec_ref(conn->grp_lock);//----*********** when listen proxy created,add conn reference,so release it
+		destroy_p2p_tcp_listen_proxy(tcp_proxy[i]);
+		pj_grp_lock_dec_ref(conn->grp_lock);//----*********** when tcp listen proxy created,add conn reference,so release it
 
 	}
-	if(p2p_proxy)
-		p2p_free(p2p_proxy);
+	if(tcp_proxy)
+		p2p_free(tcp_proxy);
+
+#ifdef USE_UDP_PROXY
+	uninit_p2p_udp_connect_proxy(&conn->udp_connect_proxy);
+
+	for(i=0; i<udp_proxy_count; i++)
+	{
+		destroy_p2p_udp_listen_proxy(udp_proxy[i]);
+		pj_grp_lock_dec_ref(conn->grp_lock);//----*********** when udp listen proxy created,add conn reference,so release it
+
+	}
+	if(udp_proxy)
+		p2p_free(udp_proxy);
+#endif
 
 	//async release self reference
 	//p2p_global_set_timer(delay, conn->grp_lock, async_destroy_p2p_conn);
@@ -430,26 +510,79 @@ void p2p_conn_wakeup_block_send(pj_ice_strans_p2p_conn* conn)
 void process_p2p_conn_cmd(pj_ice_strans_p2p_conn *conn)
 {
 	pj_uint32_t hval=0;
-	p2p_tcp_proxy_header* header = (p2p_tcp_proxy_header*)conn->recved_buffer;
+	p2p_proxy_header* header = (p2p_proxy_header*)conn->recved_buffer;
+
 	if(conn->is_initiative)
 	{
-		p2p_tcp_listen_proxy* proxy;
-
-		pj_grp_lock_acquire(conn->grp_lock);
-		proxy = pj_hash_get(conn->tcp_listen_proxys, &header->listen_port, sizeof(pj_uint16_t), &hval) ;
-		if(proxy)
-			pj_grp_lock_add_ref(proxy->grp_lock);
-		pj_grp_lock_release(conn->grp_lock);
-
-		if(proxy)
+		if(header->command == P2P_COMMAND_DATA
+			|| header->command == P2P_COMMAND_DESTROY_CONNECTION
+			|| header->command == P2P_COMMAND_REMOTE_CONNECTED)
 		{
-			p2p_tcp_listen_recved_data(proxy, header);
-			pj_grp_lock_dec_ref(proxy->grp_lock);
+			p2p_tcp_listen_proxy* proxy;
+
+			pj_grp_lock_acquire(conn->grp_lock);
+			proxy = pj_hash_get(conn->tcp_listen_proxys, &header->listen_port, sizeof(pj_uint16_t), &hval) ;
+			if(proxy)
+				pj_grp_lock_add_ref(proxy->grp_lock);
+			pj_grp_lock_release(conn->grp_lock);
+
+			if(proxy)
+			{
+				p2p_tcp_listen_recved_data(proxy, header);
+				pj_grp_lock_dec_ref(proxy->grp_lock);
+			}
 		}
+#ifdef USE_UDP_PROXY
+		else if(header->command == P2P_COMMAND_UDP_DATA)
+		{
+			p2p_udp_listen_proxy* proxy;
+
+			pj_grp_lock_acquire(conn->grp_lock);
+			proxy = pj_hash_get(conn->udp_listen_proxys, &header->listen_port, sizeof(pj_uint16_t), &hval) ;
+			if(proxy)
+				pj_grp_lock_add_ref(proxy->grp_lock);
+			pj_grp_lock_release(conn->grp_lock);
+
+			if(proxy)
+			{
+				p2p_udp_listen_recved_data(proxy, header);
+				pj_grp_lock_dec_ref(proxy->grp_lock);
+			}
+			else //tftp rand response port
+			{
+				pj_uint16_t local_port;
+				p2p_udp_listen_proxy* proxy;
+
+				p2p_create_udp_proxy(conn->transport, conn->conn_id, header->listen_port, &local_port);
+
+				pj_grp_lock_acquire(conn->grp_lock);
+				proxy = pj_hash_get(conn->udp_listen_proxys, &header->listen_port, sizeof(pj_uint16_t), &hval) ;
+				if(proxy)
+					pj_grp_lock_add_ref(proxy->grp_lock);
+				pj_grp_lock_release(conn->grp_lock);
+
+				p2p_udp_listen_proxy_idea_timer(proxy); //idea P2P_UDP_CONNECT_SOCK_TIMEOUT second no receive and send data, destroy it 
+				p2p_udp_listen_recved_data(proxy, header);
+				pj_grp_lock_dec_ref(proxy->grp_lock);
+			}
+		}
+#endif
+	
 	}
 	else
 	{
-		p2p_tcp_connect_recved_data(&conn->tcp_connect_proxy, header);
+		if(header->command == P2P_COMMAND_DATA 
+			|| header->command == P2P_COMMAND_CREATE_CONNECTION
+			|| header->command == P2P_COMMAND_DESTROY_CONNECTION)
+		{
+			p2p_tcp_connect_recved_data(&conn->tcp_connect_proxy, header);
+		}
+#ifdef USE_UDP_PROXY
+		else if(header->command == P2P_COMMAND_UDP_DATA)
+		{
+			p2p_udp_connect_recved_data(&conn->udp_connect_proxy, header);
+		}
+#endif
 	}
 }
 
@@ -512,7 +645,7 @@ static void p2p_conn_smooth_recv(pj_ice_strans_p2p_conn* conn, pj_int16_t comman
 //if receive a full command, callback to user
 static void on_p2p_conn_recved_user_data(pj_ice_strans_p2p_conn* conn)
 {
-	p2p_tcp_proxy_header* header = (p2p_tcp_proxy_header*)conn->recved_buffer;
+	p2p_proxy_header* header = (p2p_proxy_header*)conn->recved_buffer;
 	char* data_buf = (char*)(header+1);
 
 	//PJ_LOG(4,("p2p_conn", "on_p2p_conn_recved_user_data sock_id %d, listen_port %d, data_length %d, command %d", header->sock_id, header->listen_port, header->data_length, header->command));
@@ -573,14 +706,14 @@ static void on_p2p_conn_recved_user_data(pj_ice_strans_p2p_conn* conn)
 void on_p2p_conn_recved_noresend_data(void* user_data, const char* receive_buffer, size_t buffer_len)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)user_data;
-	p2p_tcp_proxy_header* header = (p2p_tcp_proxy_header*)receive_buffer;
+	p2p_proxy_header* header = (p2p_proxy_header*)receive_buffer;
 
 	header->listen_port = pj_ntohs(header->listen_port);
 	header->sock_id = pj_ntohs(header->sock_id);
 	header->command = pj_ntohs(header->command);
 	header->data_length = pj_ntohl(header->data_length);
 
-	if(header->data_length+sizeof(p2p_tcp_proxy_header) != buffer_len)
+	if(header->data_length+sizeof(p2p_proxy_header) != buffer_len)
 	{
 		PJ_LOG(4,("p2p_conn", "##### invalid data_length 3 %d", header->data_length));
 		return;
@@ -603,21 +736,24 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 	size_t pos = 0;
 	size_t remain = buffer_len;
 	size_t copyed = 0;
-	p2p_tcp_proxy_header* header;
+	p2p_proxy_header* header;
 
 	if(!p2p_conn_is_valid(conn))
 		return;
-	if(conn->is_udt_close)
+	if(conn->udt_status == UDT_STATUS_DISCONNECT)
+	{
+		PJ_LOG(3,("p2p_conn", "conn->udt_status %d, on_p2p_conn_recved_data %d, recved_buffer_len %d", conn->udt_status, buffer_len, conn->recved_buffer_len ));
 		return;
+	}
 
 	//PJ_LOG(4,("p2p_conn", "on_p2p_conn_recved_data %d, recved_buffer_len %d", buffer_len, conn->recved_buffer_len ));
 
 	pj_mutex_lock(conn->receive_mutex);
 	while (remain)
 	{
-		if(conn->recved_buffer_len < sizeof(p2p_tcp_proxy_header))
+		if(conn->recved_buffer_len < sizeof(p2p_proxy_header))
 		{
-			if((conn->recved_buffer_len+remain) < sizeof(p2p_tcp_proxy_header))//not enough head length
+			if((conn->recved_buffer_len+remain) < sizeof(p2p_proxy_header))//not enough head length
 			{
 				memcpy(conn->recved_buffer+conn->recved_buffer_len, receive_buffer+pos, remain);
 				conn->recved_buffer_len += remain;
@@ -625,13 +761,13 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 			}
 			else
 			{
-				copyed = sizeof(p2p_tcp_proxy_header)-conn->recved_buffer_len;
+				copyed = sizeof(p2p_proxy_header)-conn->recved_buffer_len;
 				memcpy(conn->recved_buffer+conn->recved_buffer_len, receive_buffer+pos, copyed); //get command head
 				pos += copyed;
 				remain -= copyed;
 
 				//cross-platform, All the fields are in network byte order, must convert to host byte order
-				header = (p2p_tcp_proxy_header*)conn->recved_buffer;
+				header = (p2p_proxy_header*)conn->recved_buffer;
 				header->listen_port = pj_ntohs(header->listen_port);
 				header->sock_id = pj_ntohs(header->sock_id);
 				header->command = pj_ntohs(header->command);
@@ -644,8 +780,8 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 				}
 				else
 				{
-					conn->recved_buffer_len = sizeof(p2p_tcp_proxy_header);
-                    if(header->data_length > TCP_SOCK_PACKAGE_SIZE)
+					conn->recved_buffer_len = sizeof(p2p_proxy_header);
+                    if(header->data_length > PROXY_SOCK_PACKAGE_SIZE)
                     {
                         PJ_LOG(2,("p2p_conn", "##### invalid data_length %d", header->data_length));
 						pj_mutex_unlock(conn->receive_mutex);
@@ -658,15 +794,15 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 		}
 		else
 		{
-			header = (p2p_tcp_proxy_header*)conn->recved_buffer;
-            if(header->data_length > TCP_SOCK_PACKAGE_SIZE)
+			header = (p2p_proxy_header*)conn->recved_buffer;
+            if(header->data_length > PROXY_SOCK_PACKAGE_SIZE)
             {
                 PJ_LOG(2,("p2p_conn", "##### invalid data_length 2 %d", header->data_length));
 				pj_mutex_unlock(conn->receive_mutex);
 				p2p_conn_udt_on_close(conn);
                 return;
             }
-			if((conn->recved_buffer_len+remain) < (sizeof(p2p_tcp_proxy_header)+header->data_length))//not enough data length
+			if((conn->recved_buffer_len+remain) < (sizeof(p2p_proxy_header)+header->data_length))//not enough data length
 			{
 				memcpy(conn->recved_buffer+conn->recved_buffer_len, receive_buffer+pos, remain);
 				conn->recved_buffer_len += remain;
@@ -674,7 +810,7 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 			}
 			else //get a full command
 			{
-				copyed = sizeof(p2p_tcp_proxy_header)+header->data_length-conn->recved_buffer_len;
+				copyed = sizeof(p2p_proxy_header)+header->data_length-conn->recved_buffer_len;
 				memcpy(conn->recved_buffer+conn->recved_buffer_len, receive_buffer+pos, copyed);
 				
 				if(header->command == P2P_COMMAND_USER_DATA 
@@ -693,6 +829,78 @@ void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t
 
 }
 
+static void p2p_conn_tcp_pause_send(pj_ice_strans_p2p_conn* conn, pj_bool_t pause)
+{
+	p2p_tcp_listen_proxy** p2p_proxy = NULL;
+	unsigned proxy_count = 0;
+	pj_hash_iterator_t itbuf, *it;
+	unsigned i;
+
+	pj_grp_lock_acquire(conn->grp_lock);
+	proxy_count = pj_hash_count(conn->tcp_listen_proxys);
+	if(proxy_count)
+	{
+		p2p_tcp_listen_proxy** proxy;
+		p2p_proxy = proxy = (p2p_tcp_listen_proxy**)p2p_malloc(sizeof(p2p_tcp_listen_proxy*)*proxy_count);
+
+		it = pj_hash_first(conn->tcp_listen_proxys, &itbuf);
+		while(it) 
+		{
+			*proxy = (p2p_tcp_listen_proxy*)pj_hash_this(conn->tcp_listen_proxys, it);
+			pj_grp_lock_add_ref((*proxy)->grp_lock);
+			it = pj_hash_next(conn->tcp_listen_proxys, it);
+			proxy++;
+		}
+	}
+	pj_grp_lock_release(conn->grp_lock);
+
+	for(i=0; i<proxy_count; i++)
+	{
+		tcp_listen_proxy_pause_send(p2p_proxy[i], pause);
+		pj_grp_lock_dec_ref(p2p_proxy[i]->grp_lock);
+
+	}
+	if(p2p_proxy)
+		p2p_free(p2p_proxy);
+}
+
+#ifdef USE_UDP_PROXY
+static void p2p_conn_udp_pause_send(pj_ice_strans_p2p_conn* conn, pj_bool_t pause)
+{
+	p2p_udp_listen_proxy** p2p_proxy = NULL;
+	unsigned proxy_count = 0;
+	pj_hash_iterator_t itbuf, *it;
+	unsigned i;
+
+	pj_grp_lock_acquire(conn->grp_lock);
+	proxy_count = pj_hash_count(conn->udp_listen_proxys);
+	if(proxy_count)
+	{
+		p2p_udp_listen_proxy** proxy;
+		p2p_proxy = proxy = (p2p_udp_listen_proxy**)p2p_malloc(sizeof(p2p_udp_listen_proxy*)*proxy_count);
+
+		it = pj_hash_first(conn->udp_listen_proxys, &itbuf);
+		while(it) 
+		{
+			*proxy = (p2p_udp_listen_proxy*)pj_hash_this(conn->udp_listen_proxys, it);
+			pj_grp_lock_add_ref((*proxy)->grp_lock);
+			it = pj_hash_next(conn->udp_listen_proxys, it);
+			proxy++;
+		}
+	}
+	pj_grp_lock_release(conn->grp_lock);
+
+	for(i=0; i<proxy_count; i++)
+	{
+		udp_listen_proxy_pause_send(p2p_proxy[i], pause);
+		pj_grp_lock_dec_ref(p2p_proxy[i]->grp_lock);
+
+	}
+	if(p2p_proxy)
+		p2p_free(p2p_proxy);
+}
+#endif
+
 void p2p_conn_pause_send(void* user_data, pj_bool_t pause)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)user_data;
@@ -701,41 +909,18 @@ void p2p_conn_pause_send(void* user_data, pj_bool_t pause)
 
 	if(conn->is_initiative)
 	{
-		p2p_tcp_listen_proxy** p2p_proxy = NULL;
-		unsigned proxy_count = 0;
-		pj_hash_iterator_t itbuf, *it;
-		unsigned i;
-
-		pj_grp_lock_acquire(conn->grp_lock);
-		proxy_count = pj_hash_count(conn->tcp_listen_proxys);
-		if(proxy_count)
-		{
-			p2p_tcp_listen_proxy** proxy;
-			p2p_proxy = proxy = (p2p_tcp_listen_proxy**)p2p_malloc(sizeof(p2p_tcp_listen_proxy*)*proxy_count);
-
-			it = pj_hash_first(conn->tcp_listen_proxys, &itbuf);
-			while(it) 
-			{
-				*proxy = (p2p_tcp_listen_proxy*)pj_hash_this(conn->tcp_listen_proxys, it);
-				pj_grp_lock_add_ref((*proxy)->grp_lock);
-				it = pj_hash_next(conn->tcp_listen_proxys, it);
-				proxy++;
-			}
-		}
-		pj_grp_lock_release(conn->grp_lock);
-
-		for(i=0; i<proxy_count; i++)
-		{
-			tcp_listen_proxy_pause_send(p2p_proxy[i], pause);
-			pj_grp_lock_dec_ref(p2p_proxy[i]->grp_lock);
-			
-		}
-		if(p2p_proxy)
-			p2p_free(p2p_proxy);
+		p2p_conn_tcp_pause_send(conn, pause);
+#ifdef USE_UDP_PROXY
+		p2p_conn_udp_pause_send(conn, pause);
+#endif
 	}
 	else
 	{
-		tcp_connect_proxy_pause_send(&conn->tcp_connect_proxy, pause, TCP_SOCK_PACKAGE_SIZE);
+		tcp_connect_proxy_pause_send(&conn->tcp_connect_proxy, pause, PROXY_SOCK_PACKAGE_SIZE);
+
+#ifdef USE_UDP_PROXY
+		udp_connect_proxy_pause_send(&conn->udp_connect_proxy, pause);
+#endif
 	}
 }
 

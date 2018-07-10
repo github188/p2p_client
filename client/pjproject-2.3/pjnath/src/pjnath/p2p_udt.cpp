@@ -99,9 +99,9 @@ static pj_status_t udt_grp_lock_release_log(const char* file, int line, pj_grp_l
 
 
 #ifdef USE_P2P_POOL
-#define UDT_RECV_DATA_LEN (sizeof(p2p_tcp_proxy_header) + TCP_SOCK_PACKAGE_SIZE)
+#define UDT_RECV_DATA_LEN (sizeof(p2p_proxy_header) + PROXY_SOCK_PACKAGE_SIZE)
 #else
-#define UDT_RECV_DATA_LEN ((sizeof(p2p_tcp_proxy_header) + TCP_SOCK_PACKAGE_SIZE)*4)
+#define UDT_RECV_DATA_LEN ((sizeof(p2p_proxy_header) + PROXY_SOCK_PACKAGE_SIZE)*4)
 #endif
 
 #ifndef USE_P2P_POOL
@@ -594,6 +594,7 @@ static pj_status_t p2p_udt_obj_send(T* t, const char* buffer, size_t buffer_len)
 #endif
 	{
 		udt_grp_lock_acquire(t->grp_lock);
+
 		if (t->destroy_req) 
 		{ 
 			//already destroy, so return
@@ -1381,10 +1382,10 @@ static pj_status_t p2p_udt_obj_model_send(T* t, const char* buffer, size_t buffe
 	size_t sended = 0;
 	pj_uint16_t data_seq = 0;
 	pj_uint16_t data_count;
-	int max_package_len = TCP_SOCK_PACKAGE_SIZE;
+	int max_package_len = PROXY_SOCK_PACKAGE_SIZE;
 
-	char send_buffer[sizeof(p2p_tcp_proxy_header) + TCP_SOCK_PACKAGE_SIZE];
-	p2p_tcp_proxy_header* header = (p2p_tcp_proxy_header* )send_buffer;
+	char send_buffer[sizeof(p2p_proxy_header) + PROXY_SOCK_PACKAGE_SIZE];
+	p2p_proxy_header* header = (p2p_proxy_header* )send_buffer;
 
 #ifdef USE_P2P_TCP
 	if(!t || !t->p2p_tcp || t->destroy_req)
@@ -1470,13 +1471,13 @@ static pj_status_t p2p_udt_obj_model_send(T* t, const char* buffer, size_t buffe
 		//if command is P2P_COMMAND_USER_DATA, sock_id is sub sequence number
 		header->sock_id = pj_htons(data_seq);
 		
-		memcpy(send_buffer+sizeof(p2p_tcp_proxy_header), buffer+sended, data_length);
+		memcpy(send_buffer+sizeof(p2p_proxy_header), buffer+sended, data_length);
 #ifdef USE_P2P_TCP
 		if(type == P2P_DATA_AV_NO_RESEND)
-			status = p2p_tcp_no_resend(t->p2p_tcp, send_buffer, sizeof(p2p_tcp_proxy_header)+data_length);
+			status = p2p_tcp_no_resend(t->p2p_tcp, send_buffer, sizeof(p2p_proxy_header)+data_length);
 		else
 #endif
-			status = p2p_udt_obj_send(t, send_buffer, sizeof(p2p_tcp_proxy_header)+data_length);
+			status = p2p_udt_obj_send(t, send_buffer, sizeof(p2p_proxy_header)+data_length);
 		if(status != PJ_SUCCESS && status != -1)
 		{
 			udt_grp_lock_release(t->grp_lock);

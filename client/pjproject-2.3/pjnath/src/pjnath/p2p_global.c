@@ -5,6 +5,7 @@
 #include <pjnath/p2p_upnp.h>
 #include <pjnath/p2p_pool.h>
 #include <pjnath/p2p_smooth.h>
+#include <pjnath/p2p_port_guess.h>
 
 #define THIS_FILE "p2p_global.c"
 #define DELAY_DESTORY_TIME 1
@@ -320,18 +321,13 @@ P2P_DECL(int) p2p_init(LOG_FUNC log_func)
 	pj_str_t guid;
 	char guid_str[PJ_GUID_MAX_LENGTH+1];
 	int thread_pro;
+	pj_time_val now;
 
 	if(p2p_inited)
 		return PJ_SUCCESS;
 	else
 		p2p_inited = PJ_TRUE;
 
-	g_p2p_global.max_recv_len = P2P_RECV_BUFFER_SIZE;
-	g_p2p_global.max_client_count = MAX_CLIENT_COUNT;
-	g_p2p_global.enable_relay = 1;
-	g_p2p_global.only_relay = 0;
-	g_p2p_global.smooth_span = P2P_SMOOTH_DEFAULT_SPAN;
-	g_p2p_global.enable_port_guess = 1;
 
 	g_p2p_global.log_func = log_func;
 	pj_log_set_level(P2P_DEFAULT_LOG_LEVEL);
@@ -367,6 +363,16 @@ P2P_DECL(int) p2p_init(LOG_FUNC log_func)
 	g_p2p_global.pool = pj_pool_create(&g_p2p_global.caching_pool.factory, "p2p", 512, 512, NULL);
 	g_p2p_global.pool_timer_heap = pj_pool_create(&g_p2p_global.caching_pool.factory, "p2p_timers", 512, 512, NULL);
 	g_p2p_global.pool_udt = pj_pool_create(&g_p2p_global.caching_pool.factory, "udt", 512, 512, NULL);
+
+	g_p2p_global.max_recv_len = P2P_RECV_BUFFER_SIZE;
+	g_p2p_global.max_client_count = MAX_CLIENT_COUNT;
+	g_p2p_global.enable_relay = 1;
+	g_p2p_global.only_relay = 0;
+	g_p2p_global.smooth_span = P2P_SMOOTH_DEFAULT_SPAN;
+	g_p2p_global.enable_port_guess = 1;
+	pj_gettimeofday(&now);
+	pj_srand( (unsigned)now.sec );
+	g_p2p_global.bind_port = (pj_uint16_t)(pj_rand() % (GUESS_MAX_PORT-GUESS_MIN_PORT) + GUESS_MIN_PORT);
 
 #ifdef P2P_ASYNC_LOG
 	g_async_log.first_log = g_async_log.last_log = NULL;
@@ -692,6 +698,15 @@ P2P_DECL(int) p2p_set_global_opt(p2p_global_opt opt, const void* optval, int opt
 				return PJ_EINVAL;
 			val = *(int*)optval;
 			g_p2p_global.enable_port_guess = val;
+			return PJ_SUCCESS;
+		}
+	case P2P_BIND_PORT:
+		{
+			pj_uint16_t val;
+			if(optlen != sizeof(pj_uint16_t))
+				return PJ_EINVAL;
+			val = *(pj_uint16_t*)optval;
+			g_p2p_global.bind_port = val;
 			return PJ_SUCCESS;
 		}
 	default:

@@ -256,8 +256,8 @@ static pj_status_t tsx_transmit_msg(pj_stun_client_tsx *tsx,
 		pj_timer_heap_cancel_if_active( tsx->timer_heap,
 	                               		&tsx->retransmit_timer,
 	                               		TIMER_INACTIVE);
-	}
-	PJ_PERROR(4, (tsx->obj_name, status, "STUN error sending message"));*/
+	}*/
+	PJ_PERROR(4, (tsx->obj_name, status, "STUN error sending message"));
 
 		status = PJ_SUCCESS; //modify for p2p,if failed to send, continue check
     }

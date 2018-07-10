@@ -19,7 +19,7 @@ typedef struct p2p_tcp_sock_proxy
 
 	pj_bool_t	 destroy_req;//To prevent duplicate destroy
 
-	char read_buffer[sizeof(p2p_tcp_proxy_header) + TCP_SOCK_PACKAGE_SIZE];/*receive data buffer*/
+	char read_buffer[sizeof(p2p_proxy_header) + PROXY_SOCK_PACKAGE_SIZE];/*receive data buffer*/
 
 	pj_ioqueue_op_key_t send_key; /*pj io send key*/
 	p2p_tcp_data* p2p_send_data_first; /*fist cache data for pending send*/
@@ -101,7 +101,7 @@ static void p2p_tcp_sock_proxy_on_destroy(void *obj)
 static void send_empty_tcp_cmd(p2p_tcp_sock_proxy *tcp_sock, pj_int16_t cmd)
 {
 	//cross-platform, All the fields are in network byte order
-	p2p_tcp_proxy_header header;
+	p2p_proxy_header header;
 	PJ_LOG(4,("p2p_tcp_s_p", "send_empty_tcp_cmd %p %d %d", tcp_sock, tcp_sock->sock_id, cmd));
 	header.listen_port = pj_htons(tcp_sock->listen_proxy->proxy_port);
 	header.sock_id = pj_htons(tcp_sock->sock_id);
@@ -110,17 +110,17 @@ static void send_empty_tcp_cmd(p2p_tcp_sock_proxy *tcp_sock, pj_int16_t cmd)
 	if(tcp_sock->listen_proxy->cb.send_tcp_data)
 		(*tcp_sock->listen_proxy->cb.send_tcp_data)(tcp_sock->listen_proxy, 
 		(const char*)&header,
-		sizeof(p2p_tcp_proxy_header));
+		sizeof(p2p_proxy_header));
 }
 
 //request create tcp connection
 static void send_tcp_connect_cmd(p2p_tcp_sock_proxy *tcp_sock)
 {
 	//cross-platform, All the fields are in network byte order
-#define CONNECT_COMMAND_LEN (sizeof(p2p_tcp_proxy_header) + sizeof(pj_uint16_t))
+#define CONNECT_COMMAND_LEN (sizeof(p2p_proxy_header) + sizeof(pj_uint16_t))
 	const size_t len = CONNECT_COMMAND_LEN;
 	char buffer[CONNECT_COMMAND_LEN];
-	p2p_tcp_proxy_header* header = (p2p_tcp_proxy_header*)buffer;
+	p2p_proxy_header* header = (p2p_proxy_header*)buffer;
 
 	PJ_LOG(4,("p2p_tcp_s_p", "send_tcp_connect_cmd %p %d", tcp_sock, tcp_sock->sock_id));
 
@@ -128,7 +128,7 @@ static void send_tcp_connect_cmd(p2p_tcp_sock_proxy *tcp_sock)
 	header->sock_id = pj_htons(tcp_sock->sock_id);
 	header->command = pj_htons(P2P_COMMAND_CREATE_CONNECTION);
 	header->data_length = pj_htonl(sizeof(pj_uint16_t));
-	*(pj_uint16_t*)(buffer+sizeof(p2p_tcp_proxy_header)) = pj_htons(tcp_sock->listen_proxy->remote_listen_port);
+	*(pj_uint16_t*)(buffer+sizeof(p2p_proxy_header)) = pj_htons(tcp_sock->listen_proxy->remote_listen_port);
 
 	if(tcp_sock->listen_proxy->cb.send_tcp_data)
 		(*tcp_sock->listen_proxy->cb.send_tcp_data)(tcp_sock->listen_proxy, 
@@ -149,7 +149,7 @@ static pj_bool_t on_tcp_proxy_read(pj_activesock_t *asock,
 	PJ_UNUSED_ARG(data);
 	if(status == PJ_SUCCESS && !tcp_sock->destroy_req)
 	{
-		p2p_tcp_proxy_header* header = (p2p_tcp_proxy_header*)tcp_sock->read_buffer;
+		p2p_proxy_header* header = (p2p_proxy_header*)tcp_sock->read_buffer;
 
 		//PJ_LOG(4,("p2p_tcp_s_p", "on_tcp_proxy_read %p %d %d", tcp_sock, tcp_sock->sock_id, size));
 		
@@ -158,7 +158,7 @@ static pj_bool_t on_tcp_proxy_read(pj_activesock_t *asock,
 		header->data_length = htonl(size);
 		if(!tcp_sock->remote_connected)//if remote connection had not connected, cache the data
 		{
-			p2p_tcp_data* data = malloc_p2p_tcp_data(tcp_sock->read_buffer, size+sizeof(p2p_tcp_proxy_header));
+			p2p_tcp_data* data = malloc_p2p_tcp_data(tcp_sock->read_buffer, size+sizeof(p2p_proxy_header));
 			if(tcp_sock->first_before_remote_connected)
 			{
 				tcp_sock->last_before_remote_connected->next = data;
@@ -175,7 +175,7 @@ static pj_bool_t on_tcp_proxy_read(pj_activesock_t *asock,
 			{
 				status = (*tcp_sock->listen_proxy->cb.send_tcp_data)(tcp_sock->listen_proxy, 
 					tcp_sock->read_buffer,
-					sizeof(p2p_tcp_proxy_header) + size);
+					sizeof(p2p_proxy_header) + size);
 				if(status == -1)//send to remote blocked,udt socket send buffer is full
 				{
 					ret = PJ_FALSE;
@@ -368,7 +368,7 @@ static pj_status_t create_p2p_tcp_sock_proxy(p2p_tcp_listen_proxy *listen_proxy,
 	pj_activesock_cfg asock_cfg;
 	pj_activesock_cb tcp_callback;
 	void *readbuf[1];
-	p2p_tcp_proxy_header* header;
+	p2p_proxy_header* header;
 	do 
 	{
 		pool = pj_pool_create(&get_p2p_global()->caching_pool.factory, 
@@ -418,16 +418,16 @@ static pj_status_t create_p2p_tcp_sock_proxy(p2p_tcp_listen_proxy *listen_proxy,
 		if (status != PJ_SUCCESS) 
 			break;
 
-		header = (p2p_tcp_proxy_header*)tcp_sock_proxy->read_buffer;
+		header = (p2p_proxy_header*)tcp_sock_proxy->read_buffer;
 		header->listen_port = pj_htons(listen_proxy->proxy_port);
 		header->sock_id = pj_htons(tcp_sock_proxy->sock_id);
 		header->command = pj_htons(P2P_COMMAND_DATA);
 
 		//start read user data,the call back function is on_tcp_proxy_read
-		readbuf[0] = tcp_sock_proxy->read_buffer + sizeof(p2p_tcp_proxy_header);
+		readbuf[0] = tcp_sock_proxy->read_buffer + sizeof(p2p_proxy_header);
 		status = pj_activesock_start_read2(tcp_sock_proxy->activesock, 
 			tcp_sock_proxy->pool, 
-			TCP_SOCK_PACKAGE_SIZE,
+			PROXY_SOCK_PACKAGE_SIZE,
 			readbuf, 0);
 		if (status != PJ_SUCCESS && status != PJ_EPENDING)
 			break;
@@ -689,7 +689,7 @@ static void on_timer_event(pj_timer_heap_t *th, pj_timer_entry *e)
 }
 
 //remote destroy tcp connection
-static void on_recved_destroy_connection(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header* tcp_data)
+static void on_recved_destroy_connection(p2p_tcp_listen_proxy* proxy, p2p_proxy_header* tcp_data)
 {
 	pj_uint32_t hval=0;
 	p2p_tcp_sock_proxy* sock;
@@ -721,7 +721,7 @@ static void on_recved_destroy_connection(p2p_tcp_listen_proxy* proxy, p2p_tcp_pr
 }
 
 //receive remote tcp data
-static void on_recved_p2p_data(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header* tcp_data)
+static void on_recved_p2p_data(p2p_tcp_listen_proxy* proxy, p2p_proxy_header* tcp_data)
 {
 	pj_uint32_t hval=0;
 	p2p_tcp_sock_proxy* sock;
@@ -736,7 +736,7 @@ static void on_recved_p2p_data(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header
 
 	if(sock)
 	{
-		p2p_tcp_data* data = malloc_p2p_tcp_data(((char*)tcp_data+sizeof(p2p_tcp_proxy_header)), tcp_data->data_length);
+		p2p_tcp_data* data = malloc_p2p_tcp_data(((char*)tcp_data+sizeof(p2p_proxy_header)), tcp_data->data_length);
 		pj_grp_lock_acquire(sock->grp_lock);
 		if(sock->sock != PJ_INVALID_SOCKET)
 		{
@@ -780,7 +780,7 @@ static void on_recved_p2p_data(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header
 }
 
 //remote had connected to user listen socket
-static void on_remote_connected(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header* tcp_data)
+static void on_remote_connected(p2p_tcp_listen_proxy* proxy, p2p_proxy_header* tcp_data)
 {
 	pj_uint32_t hval=0;
 	p2p_tcp_sock_proxy* sock;
@@ -809,7 +809,7 @@ static void on_remote_connected(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_heade
 	}
 }
 
-PJ_DECL(void) p2p_tcp_listen_recved_data(p2p_tcp_listen_proxy* proxy, p2p_tcp_proxy_header* tcp_data)
+PJ_DECL(void) p2p_tcp_listen_recved_data(p2p_tcp_listen_proxy* proxy, p2p_proxy_header* tcp_data)
 {
 	switch(tcp_data->command)
 	{
@@ -871,8 +871,8 @@ PJ_DECL(void) tcp_listen_proxy_pause_send(p2p_tcp_listen_proxy* proxy, pj_bool_t
 			{
 				void *readbuf[1];
 				//start read user data,the call back function is on_tcp_proxy_read
-				readbuf[0] = tcp_sock[i]->read_buffer + sizeof(p2p_tcp_proxy_header);
-				pj_activesock_post_read(tcp_sock[i]->activesock, TCP_SOCK_PACKAGE_SIZE,	readbuf, 0);
+				readbuf[0] = tcp_sock[i]->read_buffer + sizeof(p2p_proxy_header);
+				pj_activesock_post_read(tcp_sock[i]->activesock, PROXY_SOCK_PACKAGE_SIZE,	readbuf, 0);
 			}
 
 			tcp_sock[i]->pause_send_status = P2P_TCP_PAUSE_NONE;
