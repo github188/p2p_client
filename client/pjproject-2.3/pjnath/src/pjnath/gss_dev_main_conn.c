@@ -75,17 +75,17 @@ static void dev_main_on_disconnect(void *conn, void* user_data, int status)
 	//try reconnect
 	PJ_LOG(4,(main_conn->gssc->obj_name, "dev_main_on_disconnect %p, status=%d", main_conn, status));
 
-	if(status != GSS_DEV_KICKOUT) //kick out by other connection,do not reconnect
-	{
-		gss_conn_disconnect_server(main_conn->gssc);
-		status = gss_conn_connect_server(main_conn->gssc);
-		if(status != PJ_SUCCESS)
-		{
-			pj_time_val delay = {DEVICE_MAIN_RECONNECT_SPAN , 0 };
-			pj_timer_heap_schedule_w_grp_lock(get_p2p_global()->timer_heap, &main_conn->reconnect_timer,
-				&delay, GSS_RECONNECT_TIMER_ID, main_conn->gssc->grp_lock);
-		}
-	}
+//	if(status != GSS_DEV_KICKOUT && main_conn->gssc->destroy_in_net_thread == 0) //kick out by other connection,do not reconnect
+//	{
+//		gss_conn_disconnect_server(main_conn->gssc);
+//		status = gss_conn_connect_server(main_conn->gssc);
+//		if(status != PJ_SUCCESS)
+//		{
+//			pj_time_val delay = {DEVICE_MAIN_RECONNECT_SPAN , 0 };
+//			pj_timer_heap_schedule_w_grp_lock(get_p2p_global()->timer_heap, &main_conn->reconnect_timer,
+//				&delay, GSS_RECONNECT_TIMER_ID, main_conn->gssc->grp_lock);
+//		}
+//	}
 }
 
 static void dev_main_on_recv(void *conn, void *user_data, char* data, int len)
