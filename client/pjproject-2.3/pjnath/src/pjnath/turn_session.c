@@ -1385,15 +1385,15 @@ static void on_allocate_success(pj_turn_session *sess,
 	sess->ka_interval = sess->lifetime - 2;
 	sess->expiry.sec += (sess->ka_interval-1);
     } else {
-	int timeout;
+	int t;
 
 	sess->ka_interval = PJ_TURN_KEEP_ALIVE_SEC;
 
-	timeout = sess->lifetime - PJ_TURN_REFRESH_SEC_BEFORE;
-	if (timeout < sess->ka_interval)
-	    timeout = sess->ka_interval - 1;
+	t = sess->lifetime - PJ_TURN_REFRESH_SEC_BEFORE;
+	if (t < sess->ka_interval)
+	    t = sess->ka_interval - 1;
 
-	sess->expiry.sec += timeout;
+	sess->expiry.sec += t;
     }
 
     /* Check that relayed transport address contains correct
@@ -1900,7 +1900,7 @@ static struct ch_t *lookup_ch_by_addr(pj_turn_session *sess,
 	ch->expiry.sec += PJ_TURN_PERM_TIMEOUT - sess->ka_interval - 1;
 
 	if (bind_channel) {
-	    pj_uint32_t hval = 0;
+	    hval = 0;
 	    /* Register by channel number */
 	    pj_assert(ch->num != PJ_TURN_INVALID_CHANNEL && ch->bound);
 

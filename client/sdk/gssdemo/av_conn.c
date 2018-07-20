@@ -112,7 +112,7 @@ int av_on_h264_frame(const char* buf, int len, unsigned int time_stamp)
 	if(!dev_av_conn)
 		return -1;
 
-	return gss_dev_av_send(dev_av_conn, (char*)buf, len, P2P_SEND_BLOCK);
+	return gss_dev_av_send(dev_av_conn, (char*)buf, len, P2P_SEND_BLOCK, GSS_REALPLAY_DATA);
 }
 
 #ifdef _WIN32

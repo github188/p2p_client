@@ -386,7 +386,7 @@ aconfigure:4218: checking for uuid_generate in -luuid
 aconfigure:4252: result: no
 aconfigure:4258: checking for library containing gethostbyname
 aconfigure:4289: arm-hisiv300-linux-gcc -o conftest -O2   conftest.c -lm -lrt -lpthread  >&5
-/tmp/ccdKOhhm.o: In function `main':
+/tmp/ccwYH9ye.o: In function `main':
 conftest.c:(.text.startup+0x4): warning: gethostbyname is obsolescent, use getnameinfo() instead.
 aconfigure:4289: $? = 0
 aconfigure:4306: result: none required
@@ -2768,7 +2768,9 @@ config.status:963: creating pjsip/build/os-auto.mak
 config.status:963: creating third_party/build/os-auto.mak
 config.status:963: creating third_party/build/portaudio/os-auto.mak
 config.status:963: creating pjlib/include/pj/compat/os_auto.h
+config.status:1133: pjlib/include/pj/compat/os_auto.h is unchanged
 config.status:963: creating pjlib/include/pj/compat/m_auto.h
+config.status:1133: pjlib/include/pj/compat/m_auto.h is unchanged
 config.status:963: creating pjmedia/include/pjmedia/config_auto.h
 config.status:1133: pjmedia/include/pjmedia/config_auto.h is unchanged
 config.status:963: creating pjmedia/include/pjmedia-codec/config_auto.h

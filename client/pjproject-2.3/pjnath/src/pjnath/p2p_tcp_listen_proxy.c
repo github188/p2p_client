@@ -146,7 +146,6 @@ static pj_bool_t on_tcp_proxy_read(pj_activesock_t *asock,
 	p2p_tcp_sock_proxy *tcp_sock = (p2p_tcp_sock_proxy*)pj_activesock_get_user_data(asock);
 	pj_bool_t ret = PJ_TRUE;
 	PJ_UNUSED_ARG(remainder);
-	PJ_UNUSED_ARG(data);
 	if(status == PJ_SUCCESS && !tcp_sock->destroy_req)
 	{
 		p2p_proxy_header* header = (p2p_proxy_header*)tcp_sock->read_buffer;
@@ -158,7 +157,7 @@ static pj_bool_t on_tcp_proxy_read(pj_activesock_t *asock,
 		header->data_length = htonl(size);
 		if(!tcp_sock->remote_connected)//if remote connection had not connected, cache the data
 		{
-			p2p_tcp_data* data = malloc_p2p_tcp_data(tcp_sock->read_buffer, size+sizeof(p2p_proxy_header));
+			data = malloc_p2p_tcp_data(tcp_sock->read_buffer, size+sizeof(p2p_proxy_header));
 			if(tcp_sock->first_before_remote_connected)
 			{
 				tcp_sock->last_before_remote_connected->next = data;

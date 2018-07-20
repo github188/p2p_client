@@ -285,6 +285,16 @@ static void p2p_smooth_callback(const char* buffer, unsigned int len, void* user
 	p2p_conn_callback_recv(conn, buffer, len);
 }
 
+static void p2p_conn_destory_timer(pj_timer_heap_t *th, pj_timer_entry *e)
+{
+	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*) e->user_data;
+
+	PJ_LOG(4,("p2p_conn", "p2p_conn_destory_timer %p", conn));
+
+	p2p_conn_udt_on_close(conn);
+	PJ_UNUSED_ARG(th);
+}
+
 pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initiative)
 {
 	pj_pool_t *pool;
@@ -293,8 +303,7 @@ pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initi
 
 #ifdef USE_UDP_PROXY
 	p2p_udp_connect_proxy_cb udp_proxy_cb;
-#endif
-	
+#endif	
 
 	pool = pj_pool_create(&get_p2p_global()->caching_pool.factory, 
 		"p2p_conn%p", 
@@ -324,11 +333,27 @@ pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initi
 	pj_mutex_create_recursive(pool, NULL, &conn->send_mutex);
 	pj_mutex_create_recursive(pool, NULL, &conn->receive_mutex);
 
-	tcp_proxy_cb.send_tcp_data = &connect_proxy_send_tcp_data;
-	tcp_proxy_cb.add_ref = &add_tcp_proxy_ref;
-	tcp_proxy_cb.release_ref = &release_tcp_proxy_ref;
-	tcp_proxy_cb.on_tcp_connected = &on_tcp_proxy_connected;
-	init_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy, proxy_addr, pool, &tcp_proxy_cb, conn);
+	if(!is_initiative)
+	{
+		pj_time_val t;
+
+		tcp_proxy_cb.send_tcp_data = &connect_proxy_send_tcp_data;
+		tcp_proxy_cb.add_ref = &add_tcp_proxy_ref;
+		tcp_proxy_cb.release_ref = &release_tcp_proxy_ref;
+		tcp_proxy_cb.on_tcp_connected = &on_tcp_proxy_connected;
+		init_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy, proxy_addr, pool, &tcp_proxy_cb, conn);
+
+#define DESTORY_TIMEOUT (30) //30 second timeout, from create to accept interval
+		pj_timer_entry_init(&conn->destroy_timer, 0, conn, &p2p_conn_destory_timer);
+		t.sec = DESTORY_TIMEOUT;
+		t.msec = 0;
+		pj_timer_heap_schedule_w_grp_lock(get_p2p_global()->timer_heap, 
+			&conn->destroy_timer,
+			&t, 
+			0, 
+			NULL);
+	}
+
 
 #ifdef USE_UDP_PROXY
 	udp_proxy_cb.send_udp_data = &connect_proxy_send_udp_data;
@@ -343,7 +368,7 @@ pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_addr, pj_bool_t is_initi
 	pj_grp_lock_add_ref(conn->grp_lock);
 	pj_grp_lock_add_handler(conn->grp_lock, pool, conn, &p2p_conn_on_destroy);
 
-		PJ_LOG(4,("p2p_conn", "create_p2p_conn get_p2p_global()->smooth_span %d is_initiative %d", get_p2p_global()->smooth_span, is_initiative));
+	PJ_LOG(4,("p2p_conn", "create_p2p_conn get_p2p_global()->smooth_span %d is_initiative %d", get_p2p_global()->smooth_span, is_initiative));
 	return conn;
 }
 
@@ -387,6 +412,9 @@ void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn)
 		return;
 	}
 	conn->destroy_req = PJ_TRUE;
+
+	if(!conn->is_initiative)
+		pj_timer_heap_cancel_if_active(get_p2p_global()->timer_heap, &conn->destroy_timer, 0);
 
 	//prevent deadlock, get items in hash table, then clean hash table
 	tcp_proxy_count = pj_hash_count(conn->tcp_listen_proxys);
@@ -463,7 +491,8 @@ void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn)
 	if(icest)
 		pj_ice_strans_destroy(icest);
 
-	uninit_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy);
+	if(!conn->is_initiative)
+		uninit_p2p_tcp_connect_proxy(&conn->tcp_connect_proxy);
 
 	for(i=0; i<tcp_proxy_count; i++)
 	{
@@ -551,8 +580,7 @@ void process_p2p_conn_cmd(pj_ice_strans_p2p_conn *conn)
 			else //tftp rand response port
 			{
 				pj_uint16_t local_port;
-				p2p_udp_listen_proxy* proxy;
-
+				
 				p2p_create_udp_proxy(conn->transport, conn->conn_id, header->listen_port, &local_port);
 
 				pj_grp_lock_acquire(conn->grp_lock);

@@ -2201,9 +2201,9 @@ static pj_bool_t icedemo_input_remote(pj_ice_strans *ice_st, char* buffer, unsig
 	case 'c':
 		{
 			int cnt;
-			char c[32], net[32], ip[80];
+			char cval[32], net[32], ip[80];
 
-			cnt = sscanf(line+2, "%s %s %s", c, net, ip);
+			cnt = sscanf(line+2, "%s %s %s", cval, net, ip);
 			if (cnt != 3) {
 				goto on_error;
 			}

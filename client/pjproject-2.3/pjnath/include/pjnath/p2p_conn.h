@@ -141,6 +141,10 @@ typedef struct pj_ice_strans_p2p_conn
 	p2p_udp_connect_proxy udp_connect_proxy;
 #endif
 
+	//device receive PJ_STUN_P2P_CONNNECT_REQUEST, but no receive PJ_STUN_P2P_EXCHANGE_INFO_REQUEST
+	//the connection can not be destroy,so add timer to destroy the connection
+	pj_timer_entry destroy_timer;
+
 }pj_ice_strans_p2p_conn;
 
 pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_add, pj_bool_t is_initiativer);
@@ -165,12 +169,12 @@ void p2p_conn_udt_on_close(void* user_data);
 
 //report session information to p2p server
 #define P2P_SESSION_OK 1
-#define P2P_FAILED_EXCHANGE_INFO -2
-#define P2P_DATA_CONNECT_SERVER -3
-#define P2P_CREATE_ICE_ERROR -4
-#define P2P_CREATE_UDT_ERROR -5
-#define P2P_FAILED_NEGO -6
-#define P2P_CONNECT_USER -7
+#define P2P_FAILED_EXCHANGE_INFO -2 //failed to exchange ip information
+#define P2P_DATA_CONNECT_SERVER -3 //data connection failed to connect server
+#define P2P_CREATE_ICE_ERROR -4 //failed to create ice object
+#define P2P_CREATE_UDT_ERROR -5 //failed to create udt object
+#define P2P_FAILED_NEGO -6 //failed to p2p negotiate
+#define P2P_CONNECT_USER -7 //failed to connect remote user
 void p2p_report_session_info(pj_ice_strans_p2p_conn* conn, int result, unsigned char port_guess_ok);
 
 PJ_END_DECL

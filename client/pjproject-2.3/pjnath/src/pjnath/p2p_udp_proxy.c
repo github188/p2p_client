@@ -4,6 +4,8 @@
 
 #ifdef USE_UDP_PROXY
 
+//#define P2P_UDP_PROXY_DEBUG 1
+
 #define P2P_UDP_CONNECT_SOCK_TIMEOUT 90
 
 typedef struct p2p_udp_connect_sock 
@@ -57,6 +59,8 @@ pj_bool_t udp_listen_proxy_on_recvfrom(pj_activesock_t *asock,
 	if(status == PJ_SUCCESS && !proxy->destroy_req && !proxy->pause_send)
 	{
 		p2p_proxy_header* header = (p2p_proxy_header*)proxy->read_buffer;
+
+		//PJ_LOG(3,("p2p_udp_l_p", "udp_listen_proxy_on_recvfrom %p, size %d", proxy, size));
 
 		pj_grp_lock_acquire(proxy->grp_lock);
 
@@ -289,6 +293,7 @@ PJ_DECL(void) p2p_udp_listen_recved_data(p2p_udp_listen_proxy* proxy, p2p_proxy_
 	int addr_len = sizeof(addr);
 	pj_ssize_t data_length = udp_data->data_length;
 	pj_str_t local_addr = pj_str(LOCAL_HOST_IP);
+	char* real_data = (char*)udp_data+sizeof(p2p_proxy_header);
 
 	pj_gettickcount(&proxy->live_time);
 
@@ -298,11 +303,15 @@ PJ_DECL(void) p2p_udp_listen_recved_data(p2p_udp_listen_proxy* proxy, p2p_proxy_
 
 	status = pj_activesock_sendto(proxy->udp_activesock, 
 		&proxy->send_key, 
-		(char*)udp_data+sizeof(p2p_proxy_header),
+		real_data,
 		&data_length, 
 		0, 
 		&addr,
 		addr_len);
+
+#ifdef P2P_UDP_PROXY_DEBUG
+	PJ_LOG(4,("p2p_udp_l_p", "real_data[0] %d,real_data[1] %d,real_data[2] %d, data_length %d", real_data[0], real_data[1], pj_ntohs(*(unsigned short*)(real_data+2)), data_length));
+#endif
 
 	if (status != PJ_SUCCESS) 
 	{
@@ -368,8 +377,9 @@ static void p2p_udp_connect_sock_send(p2p_udp_connect_sock *udp_sock, p2p_proxy_
 	if (status != PJ_SUCCESS) 
 		return;
 
-	//PJ_LOG(4,("p2p_udp_c_p", "%d %d %d", real_data[0], real_data[1], pj_ntohs(*(unsigned short*)(real_data+2))));
-
+#ifdef P2P_UDP_PROXY_DEBUG
+	PJ_LOG(4,("p2p_udp_c_p", "real_data[0] %d,real_data[1] %d, real_data[2] %d, data_length %d", real_data[0], real_data[1], pj_ntohs(*(unsigned short*)(real_data+2)), data_length));
+#endif
 	status = pj_activesock_sendto(udp_sock->activesock, 
 		&udp_sock->send_key, 
 		real_data,

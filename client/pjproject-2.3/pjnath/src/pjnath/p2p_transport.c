@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.5.000"
+#define P2P_VERSION "1.5.100"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -372,9 +372,24 @@ static void on_ice_data_keep_alive(pj_ice_strans *ice_st,
 {
 	pj_ice_strans_p2p_conn* conn;
 	pj_ice_strans_cfg *ice_cfg;
+	pj_bool_t udt_sock_invalid = PJ_FALSE;
+
 	conn = pj_ice_strans_get_user_data(ice_st);
 	ice_cfg = pj_ice_strans_get_cfg(ice_st);
-	PJ_LOG(4,(conn->transport->obj_name, "on_ice_data_keep_alive %p, id=%d, status=%d", conn->transport, conn->conn_id, status));
+
+	if(conn->is_initiative)
+	{
+		if(conn->udt.p2p_udt_connector)
+			udt_sock_invalid = PJ_TRUE;
+	}
+	else
+	{
+		if(conn->udt.p2p_udt_accepter)
+			udt_sock_invalid = PJ_TRUE;
+	}
+
+	PJ_LOG(4,(conn->transport->obj_name, "on_ice_data_keep_alive %p, id=%d,status=%d,disconnect_req=%d",
+		conn->transport, conn->conn_id, status, conn->disconnect_req, conn->udt_status));
 	if(status != PJ_SUCCESS)
 	{
 		//wake up block send
@@ -382,6 +397,8 @@ static void on_ice_data_keep_alive(pj_ice_strans *ice_st,
 
 		//if user had called p2p_transport_disconnect, do not call on_connection_disconnect
 		if( !conn->disconnect_req 
+			&& udt_sock_invalid
+			&& (conn->udt_status == UDT_STATUS_CONNECTED || conn->udt_status == UDT_STATUS_DISCONNECT)
 			&& conn->transport->cb 
 			&& conn->transport->cb->on_connection_disconnect)
 		{
@@ -1196,6 +1213,9 @@ pj_status_t p2p_listener_udt_on_accept(void* user_data, void* udt_sock, pj_socka
 		udt_cb.udt_send = &p2p_ice_send_data;
 		udt_cb.udt_on_noresend_recved = &on_p2p_conn_recved_noresend_data;
 
+		//accept ok,cancel destroy_timer
+		pj_timer_heap_cancel_if_active(get_p2p_global()->timer_heap, &conn->destroy_timer, 0);
+
 		create_p2p_udt_accepter(&udt_cb, conn, conn->send_buf_size, conn->recv_buf_size, udt_sock, sock, &conn->udt.p2p_udt_accepter);
 		//when accept udt socket, callback to user
 		if(p2p->cb && p2p->cb->on_accept_remote_connection)
@@ -1420,9 +1440,6 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 	pj_grp_lock_acquire(transport->grp_lock);
 	if (pj_hash_get(transport->conn_hash_table, connection_id, sizeof(pj_int32_t),	&hval) == NULL) 
 	{		
-		pj_ice_strans_cfg * ice_cfg = 0;
-		ice_cfg = pj_ice_strans_get_cfg(transport->assist_icest);
-
 		conn->conn_id = *connection_id;
 		conn->transport = transport;
 		conn->hash_value = hval;

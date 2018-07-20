@@ -103,6 +103,7 @@ static int p2p_worker_thread(void *unused)
 
 	while (!g_p2p_global.thread_quit_flag) {
 		handle_events(500, NULL);
+
 	}
 	PJ_LOG(4, ("p2p_worker_thread", "p2p_worker_thread end"));
 	return 0;

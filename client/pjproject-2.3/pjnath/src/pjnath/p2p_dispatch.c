@@ -347,6 +347,9 @@ static int p2p_dispatch_create_socket(p2p_dispatch_requester* requester, int ind
 
 	//connect dispatch server
 	status = pj_activesock_start_connect(requester->activesock[index], requester->pool, requester->server_addr[index], pj_sockaddr_get_len(requester->server_addr[index]));
+
+	PJ_LOG(4,("p2p_ds", "create_p2p_dispatch_requester pj_activesock_start_connect index %d, status %d, asock %p", index, status, requester->activesock[index]));
+
 	if (status == PJ_SUCCESS)   //connect successful immediately
 	{
 		on_request_connect_complete(requester->activesock[index], PJ_SUCCESS);
@@ -443,9 +446,11 @@ void fill_query_send_buffer(p2p_dispatch_requester* requester)
 	GSS_DATA_HEADER* header = (GSS_DATA_HEADER*)requester->send_buffer;
 	GSS_DISP_QUERY* disp_query = (GSS_DISP_QUERY*)(header+1);
 
+#define QUERY_PADDING_LEN (64) //too small size,the data will be  intercepted
+
 	header->cmd = requester->disp_cmd;
 	header->data_seq = LAST_DATA_SEQ;
-	header->len = pj_htons(sizeof(GSS_DISP_QUERY));
+	header->len = pj_htons(sizeof(GSS_DISP_QUERY)+QUERY_PADDING_LEN);
 
 	strcpy(disp_query->dest_user, requester->dest_user.ptr);
 }
