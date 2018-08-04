@@ -24,3 +24,55 @@
 增加p2p_set_global_opt P2P_ENABLE_RELAY,P2P_ONLY_RELAY选项
 修改p2p_tcp_send 防止在转发的情况下，多线程死锁,修改缓存区256个数据包，修改心跳时间为1秒
 修改on_tcp_proxy_connected回调函数，增加user_data参数
+
+1.3.0.0 2017/12/11
+修改滑动窗口每rtt/2 cwnd+1
+dup ack cwnd*3/4,dup ack 超时重传误判
+handle_incoming_check ,ipv6客户端连接ipv4 ipc
+修改on_p2p_connect 调用者主动调用p2p_transport_disconnect,不回调on_connect_complete
+修改gss_conn_send,增加send_mutex, 支持多线程
+修改p2p_udt_obj_model_send,增加pkg_seq 支持多线程
+增加视频平滑处理，600ms
+修改线程级别，最高99
+p2p_udt_obj_model_send 加锁
+增加p2p_transport_av_send 接口
+
+1.4.0.0 2018/2/24
+增加端口探测功能
+增加P2P_RESET_BUF 选项
+音频不重传，修改p2p_transport_av_send
+修复tcp客户端黏包问题，修改gss_conn_on_read
+
+1.4.010 2018/3/30
+PJ_HAS_SYS_TIMEB_H 修改为0 ，android NDK R12
+增加P2P_PAUSE_RECV，选项
+增加gss_client_av_pause_recv 函数，接收端暂定接收数据，修改pj_activesock_post_read size_to_read
+增加设备端清理缓存接口
+
+1.4.227 2018/4/27
+修改gss_dev_av_clean_buf，增加命令GSS_CLEAN_BUFFER
+增加p2p_tcp_clear_send_buf
+修改p2p_smooth_free，smooth->smooth_buffer.valid增加尾部长度
+增加async_post_pause_data函数，取消暂停接收后，将剩余的数据回调给用户
+增加GSS_PULL_STATUS_CHANGED 命令
+增加 pj_ice_strans_p2p_conn.disconnect_req
+struct p2p_tcp_snd_data 结构强制四字节对齐
+
+1.4.300 2018/5/23
+修改2p_smooth 内存分配四字节对齐
+修改 p2p_smooth_callback_play多线程释放的问题
+收到无效包 p2p_conn_udt_on_close
+
+1.4.330
+增加--enable-epoll 编译选项,设备端使用epoll网络模型
+修改端口猜测GUESS_MIN_TTL值，p2p_guess_timer中，设备端不调用p2p_guess_create_holes
+p2p_transport_destroy 设备端没有delay_destroy的处理
+p2p_transport_connect 调整pj_ice_strans_p2p_connnect调用顺序,有些环境on_p2p_connect回调太快,pj_hash_get会找不到p2p连接
+修改p2p_tcp心跳，1秒一次，8秒超时
+修改config.sub,增加mips-linux-uclibc，增加对mips平台编译支持。
+
+1.5.000
+增加pj_ice_strans_p2p_conn.udt_status 变量,表示UDT对象的状态
+增加p2p_thread_unregister 函数，释放pj_thread_register的内存
+query_send_buffer 函数，增加QUERY_PADDING_LEN，防止数据包太小被防火墙丢弃。
+增加pj_ice_strans_p2p_conn.destroy_timer，释放设备端资源

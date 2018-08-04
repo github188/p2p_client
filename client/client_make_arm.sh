@@ -1,5 +1,6 @@
 #! /bin/sh
 cd miniupnpc-1.9.20150206
+make clean
 make -f MakefileArm
 cd ..
 

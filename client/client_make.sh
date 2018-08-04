@@ -1,16 +1,21 @@
 #! /bin/sh
 cd miniupnpc-1.9.20150206
+make clean
 make
 cd ..
+echo "make miniupnpc complete"
 
 cp udt4.11/src/*.cpp pjproject-2.3/pjnath/src/pjnath
+echo "cp all udt cpp to pjnath"
 
 cd pjproject-2.3
 chmod +x configure
 chmod +x aconfigure
 make clean
+echo "make clean"
 DIR="$( cd "$( dirname "$0"  )" && pwd  )"
-./configure --prefix=$DIR
+echo $DIR
+./configure --prefix=$DIR --enable-epoll
 
 cd pjlib/build/
 make 

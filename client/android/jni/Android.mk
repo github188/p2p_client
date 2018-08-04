@@ -116,6 +116,8 @@ $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/stun_transaction.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/turn_session.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/turn_sock.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/p2p_tcp.c \
+$(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/p2p_smooth.c \
+$(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/p2p_port_guess.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/gss_client_signaling_conn.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/gss_client_av_conn.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/gss_client_pull_conn.c \
@@ -124,6 +126,7 @@ $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/gss_dev_push_conn.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/gss_dev_av_conn.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/gss_conn.c \
 $(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/rbtree.c \
+$(SOURCE_PATH)/pjproject-2.3/pjnath/src/pjnath/p2p_udp_proxy.c \
 $(SOURCE_PATH)/udt4.11/src/api.cpp \
 $(SOURCE_PATH)/udt4.11/src/buffer.cpp \
 $(SOURCE_PATH)/udt4.11/src/cache.cpp \
