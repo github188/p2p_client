@@ -29,6 +29,7 @@ uname -v = #26~16.04.1-Ubuntu SMP Fri Jun 15 14:35:08 UTC 2018
 
 PATH: /home/donyj/bin
 PATH: /home/donyj/.local/bin
+PATH: /opt/android/ndk/android-ndk-r16b
 PATH: /usr/local/openssl/bin
 PATH: .
 PATH: /home/donyj/workspace/mips-gcc472-glibc216-32bit/bin
@@ -386,7 +387,7 @@ aconfigure:4218: checking for uuid_generate in -luuid
 aconfigure:4252: result: no
 aconfigure:4258: checking for library containing gethostbyname
 aconfigure:4289: arm-hisiv300-linux-gcc -o conftest -O2   conftest.c -lm -lrt -lpthread  >&5
-/tmp/ccwYH9ye.o: In function `main':
+/tmp/ccMb9eqf.o: In function `main':
 conftest.c:(.text.startup+0x4): warning: gethostbyname is obsolescent, use getnameinfo() instead.
 aconfigure:4289: $? = 0
 aconfigure:4306: result: none required

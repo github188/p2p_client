@@ -48,8 +48,11 @@ enum{SEND_STATE_SLOW_START=0, SEND_STATE_AVOID_CONGESTION, SEND_STATE_FAST_RECOV
 #define P2P_TCP_TYPE_ZERO_WND (0xA3)
 #define P2P_TCP_TYPE_HEART (0xA4)
 #define P2P_TCP_TYPE_DATA_NORESEND (0xA5)
+#define P2P_TCP_TYPE_SWITCH_SOCK (0xA6)
 
-#define P2P_TCP_CLOSE_TIMEOUT (8) //second
+#define P2P_TCP_CLOSE_TIMEOUT (12) //second
+
+#define P2P_TCP_SWITCH_SOCK (6) //second
 
 #define P2P_TCP_HEART_TIMEOUT (1) //second
 
@@ -1156,28 +1159,40 @@ static void p2p_tcp_zero_wnd_probe(pj_timer_heap_t *th, pj_timer_entry *e)
 	tcp_grp_lock_release(sk->grp_lock);
 }
 
-static void p2p_tcp_send_heart(p2p_tcp_sock* sk)
+static void p2p_tcp_send_header(p2p_tcp_sock* sk, pj_uint8_t type)
 {
 	p2p_tcp_header h;
 
 	memset(&h, 0, sizeof(p2p_tcp_header));
 
-	h.type = P2P_TCP_TYPE_HEART;
+	h.type = type;
 	h.ack = sk->last_send_ack+1;
 	h.wnd_size = P2P_TCP_RECV_BUFFER_COUNT>sk->recved_user_data_count? P2P_TCP_RECV_BUFFER_COUNT - sk->recved_user_data_count : 0;
 	p2p_tcp_header_hton(&h);	
 	p2p_tcp_sendto_peer(sk, (const char*)&h, sizeof(p2p_tcp_header));
 
 #ifdef P2P_TCP_DEBUG_LOG
-	PJ_LOG(4,("p2p_tcp", "p2p_tcp_send_heart send P2P_TCP_TYPE_HEART"));
+	PJ_LOG(4,("p2p_tcp", "p2p_tcp_send_header send %d, socket %d", type, sk->sock));
 #endif
 }
+
+PJ_INLINE(void) p2p_tcp_send_heart(p2p_tcp_sock* sk)
+{
+	p2p_tcp_send_header(sk, P2P_TCP_TYPE_HEART);
+}
+
+PJ_INLINE(void) p2p_tcp_send_switch_sock(p2p_tcp_sock* sk)
+{
+	p2p_tcp_send_header(sk, P2P_TCP_TYPE_SWITCH_SOCK);
+}
+
 
 static void p2p_tcp_check_heart(pj_timer_heap_t *th, pj_timer_entry *e)
 {
 	pj_time_val now;
 	p2p_tcp_sock* sk = (p2p_tcp_sock*) e->user_data;
 	pj_time_val t;
+	int recv_span=0;
 
 	PJ_UNUSED_ARG(th);
 
@@ -1189,15 +1204,26 @@ static void p2p_tcp_check_heart(pj_timer_heap_t *th, pj_timer_entry *e)
 #endif
 
 	tcp_grp_lock_acquire(sk->grp_lock);
+	recv_span = now.sec - sk->last_recv_time.sec;
+
+	if(recv_span > P2P_TCP_SWITCH_SOCK)
+	{
+		if(sk->sock)
+		{
+			sk->sock = 0;
+			PJ_LOG(3,("p2p_tcp", "p2p_tcp_check_heart P2P_TCP_SWITCH_SOCK  %p", sk));
+			p2p_tcp_send_switch_sock(sk);
+		}
+	}
 	//check close timeout
-	if(now.sec - sk->last_recv_time.sec > P2P_TCP_CLOSE_TIMEOUT)
+	if(recv_span > P2P_TCP_CLOSE_TIMEOUT)
 	{
 		sk->cb.on_close(sk->cb.user_data);
 		tcp_grp_lock_release(sk->grp_lock);
 		return;
 	}
 
-	if(now.sec - sk->last_send_time.sec >= P2P_TCP_HEART_TIMEOUT)
+	if(now.sec - sk->last_send_time.sec  >= P2P_TCP_HEART_TIMEOUT)
 	{
 		p2p_tcp_send_heart(sk);
 	}
@@ -1540,8 +1566,6 @@ void p2p_tcp_data_recved(p2p_tcp_sock* sock, const void* buffer, int buffer_len)
 	if(sock == NULL || buffer_len <= 0)
 		return ;
 
-	//PJ_LOG(4,("p2p_tcp", "p2p_tcp_data_recved %p buffer_len %d recved_user_data_count %d", sock, buffer_len, sock->recved_user_data_count));
-
 	p2p_tcp_header_ntoh(header);
 
 	pj_gettickcount(&now);
@@ -1552,6 +1576,8 @@ void p2p_tcp_data_recved(p2p_tcp_sock* sock, const void* buffer, int buffer_len)
 	sock->last_recv_time = now;	
 
 	zero_wnd_probe_on_recved(sock, &now);
+
+	//PJ_LOG(4,("p2p_tcp", "p2p_tcp_data_recved %p buffer_len %d recved_user_data_count %d,type=%d", sock, buffer_len, sock->recved_user_data_count, header->type));
 
 	switch(header->type)
 	{
@@ -1578,6 +1604,16 @@ void p2p_tcp_data_recved(p2p_tcp_sock* sock, const void* buffer, int buffer_len)
 
 	case P2P_TCP_TYPE_DATA_NORESEND:
 		sock->cb.on_noresned_recved(sock->cb.user_data, (const char*)(header+1), header->len);
+		break;
+
+	case P2P_TCP_TYPE_SWITCH_SOCK:
+		{
+			if(sock->sock)
+			{
+				sock->sock = 0;
+				PJ_LOG(3,("p2p_tcp", "p2p_tcp_data_recved P2P_TCP_SWITCH_SOCK  %p", sock));
+			}
+		}
 		break;
 
 	case P2P_TCP_TYPE_HEART: //nothing to do
