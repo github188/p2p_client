@@ -76,3 +76,6 @@ p2p_transport_connect 调整pj_ice_strans_p2p_connnect调用顺序,有些环境on_p2p_conn
 增加p2p_thread_unregister 函数，释放pj_thread_register的内存
 query_send_buffer 函数，增加QUERY_PADDING_LEN，防止数据包太小被防火墙丢弃。
 增加pj_ice_strans_p2p_conn.destroy_timer，释放设备端资源
+
+1.5.110
+增加当无法穿透或者穿透后5S内无任何数据交互时切换到转发模式
