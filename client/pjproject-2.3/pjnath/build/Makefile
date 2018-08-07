@@ -31,7 +31,7 @@ export _CFLAGS 	:= $(CC_CFLAGS) $(OS_CFLAGS) $(HOST_CFLAGS) $(M_CFLAGS) \
 export _CXXFLAGS:= $(_CFLAGS) $(CC_CXXFLAGS) $(OS_CXXFLAGS) $(M_CXXFLAGS) \
 		   $(HOST_CXXFLAGS) $(CXXFLAGS) $(CC_INC)../../../udt4.11/src
 export _LDFLAGS := $(CC_LDFLAGS) $(OS_LDFLAGS) $(M_LDFLAGS) $(HOST_LDFLAGS) \
-		   $(APP_LDFLAGS) $(LDFLAGS) -lstdc++ -L../../../miniupnpc-1.9.20150206 -lminiupnpc
+		   $(APP_LDFLAGS) $(LDFLAGS) -lstdc++ -L../../../miniupnpc-1.9.20150206 -lminiupnpc -lpthread -ldl
 
 ###############################################################################
 # Defines for building PJNATH library
