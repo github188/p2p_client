@@ -178,15 +178,26 @@ P2P_DECL(int) gss_dev_push_send(void *transport, char* buf, int buffer_len, char
 		return PJ_EINVAL;
 
 	check_pj_thread();
+	
+	if(type == GSS_AUDIO_DATA)
+	{
+		cmd = GSS_PUSH_AUDIO;
+	}
+	else if(type == GSS_VIDEO_DATA)
+	{
+		if(is_key)
+			cmd = GSS_PUSH_KEY_VIDEO;
+		else
+			cmd = GSS_PUSH_VIDEO;
+	}
+	else if(type >= GSS_CUSTOM_DATA && type <= GSS_CUSTOM_MAX_DATA)
+	{
+		cmd = type;
+	}
+	else
+		return PJ_EINVAL;
 
 	time_stamp = pj_htonl(time_stamp);
-
-	if(type == GSS_AUDIO_DATA)
-		cmd = GSS_PUSH_AUDIO;
-	else if(is_key)
-		cmd = GSS_PUSH_KEY_VIDEO;
-	else
-		cmd = GSS_PUSH_VIDEO;
 
 	return gss_conn_send(conn->gssc, buf, buffer_len, (char*)&time_stamp, sizeof(unsigned int), cmd, model);
 }

@@ -79,3 +79,6 @@ query_send_buffer 函数，增加QUERY_PADDING_LEN，防止数据包太小被防火墙丢弃。
 
 1.5.110
 增加当无法穿透或者穿透后5S内无任何数据交互时切换到转发模式
+
+1.5.120
+gss_dev_push_send 增加了GSS_CUSTOM_DATA 自定义类型的格式

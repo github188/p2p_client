@@ -80,6 +80,9 @@ typedef enum tcp_client_type{
 
 #define GSS_PULL_STATUS_CHANGED (33)
 
+#define GSS_CUSTOM_BASE (128) //for push custom type,to see gss_dev_push_send
+#define GSS_CUSTOM_MAX (GSS_CUSTOM_BASE+32)
+
 
 #define LAST_DATA_SEQ (0xFF)
 #pragma pack(1)
