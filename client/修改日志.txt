@@ -82,3 +82,6 @@ query_send_buffer 函数，增加QUERY_PADDING_LEN，防止数据包太小被防火墙丢弃。
 
 1.5.120
 gss_dev_push_send 增加了GSS_CUSTOM_DATA 自定义类型的格式
+
+1.5.130
+gss_dev_push_send 的type 参数改成unsigned char 了
