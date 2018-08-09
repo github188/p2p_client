@@ -1,10 +1,10 @@
-export CC = arm-hisiv300-linux-gcc -c
-export CXX = arm-hisiv300-linux-g++ -c
-export AR = arm-hisiv300-linux-ar
+export CC = mipsel-openwrt-linux-gcc -c
+export CXX = mipsel-openwrt-linux-g++ -c
+export AR = mipsel-openwrt-linux-ar
 export AR_FLAGS = rv
-export LD = arm-hisiv300-linux-gcc
+export LD = mipsel-openwrt-linux-gcc
 export LDOUT = -o 
-export RANLIB = arm-hisiv300-linux-ranlib
+export RANLIB = mipsel-openwrt-linux-ranlib
 
 export OBJEXT := .o
 export LIBEXT := .a

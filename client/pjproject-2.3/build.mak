@@ -7,8 +7,8 @@ export MACHINE_NAME := auto
 export OS_NAME := auto
 export HOST_NAME := unix
 export CC_NAME := gcc
-export TARGET_NAME := arm-hisiv300-linux-gnu
-export CROSS_COMPILE := arm-hisiv300-linux-
+export TARGET_NAME := mipsel-openwrt-linux-gnu
+export CROSS_COMPILE := mipsel-openwrt-linux-
 export LINUX_POLL := select 
 export SHLIB_SUFFIX := so
 
@@ -163,8 +163,8 @@ PJ_VIDEO_LDFLAGS += $(SDL_LDFLAGS) $(FFMPEG_LDFLAGS) $(V4L2_LDFLAGS) \
                    $(OPENH264_LDFLAGS) $(LIBYUV_LDFLAGS)
 
 # CFLAGS, LDFLAGS, and LIBS to be used by applications
-export APP_CC := arm-hisiv300-linux-gcc
-export APP_CXX := arm-hisiv300-linux-g++
+export APP_CC := mipsel-openwrt-linux-gcc
+export APP_CXX := mipsel-openwrt-linux-g++
 export APP_CFLAGS := -DPJ_AUTOCONF=1\
 	-O2 -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1\
 	$(PJ_VIDEO_CFLAGS) \
@@ -260,7 +260,7 @@ export APP_LDLIBS := $(PJSUA_LIB_LDLIB) \
 	$(APP_THIRD_PARTY_LIBS)\
 	$(APP_THIRD_PARTY_EXT)\
 	$(PJLIB_LDLIB) \
-	-lm -lrt -lpthread 
+	-lm 
 export APP_LDXXLIBS := $(PJSUA2_LIB_LDLIB) \
 	-lstdc++ \
 	$(APP_LDLIBS)

@@ -28,7 +28,7 @@
  */
 
 /* Canonical OS name */
-#define PJ_OS_NAME "arm-hisiv300-linux-gnu"
+#define PJ_OS_NAME "mipsel-openwrt-linux-gnu"
 
 /* Legacy macros */
 /* #undef PJ_WIN32 */

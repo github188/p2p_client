@@ -111,7 +111,7 @@ static void gss_client_pull_on_recv(gss_client_pull_conn *pull_conn, char* data,
 	unsigned int* time_stamp;
 	char* av_data;
 	GSS_DATA_HEADER* header;
-	char av_type;
+	char av_type = GSS_CUSTOM_BASE;
 
 	if(!pull_conn->cb.on_recv)
 		return;
@@ -122,8 +122,10 @@ static void gss_client_pull_on_recv(gss_client_pull_conn *pull_conn, char* data,
 	header = (GSS_DATA_HEADER*)data;
 	if(header->cmd == GSS_PUSH_VIDEO || header->cmd == GSS_PUSH_KEY_VIDEO)
 		av_type = GSS_VIDEO_DATA;
-	else
+	else if(header->cmd == GSS_PUSH_AUDIO)
 		av_type = GSS_AUDIO_DATA;
+	else if(header->cmd >= GSS_CUSTOM_BASE && header->cmd <= GSS_CUSTOM_MAX)
+		av_type = header->cmd;
 
 	time_stamp = (unsigned int*)(header+1);
 	av_data = (char*)(time_stamp+1);
@@ -183,6 +185,8 @@ static void client_pull_on_recv(void *conn, void *user_data, char* data, int len
 		gss_client_pull_on_recv(pull_conn, data, len);
 		break;
 	default:
+		if(header->cmd >= GSS_CUSTOM_BASE && header->cmd <= GSS_CUSTOM_MAX)
+			gss_client_pull_on_recv(pull_conn, data, len);
 		break;
 	}
 }

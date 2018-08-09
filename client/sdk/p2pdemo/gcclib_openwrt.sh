@@ -1,4 +1,4 @@
-rm -f p2p.a
+rm -f p2p-openwrt-linux-mips.a
 
 mkdir pjnath_obj
 cd pjnath_obj
@@ -20,7 +20,7 @@ cd pjlib-util_obj
 ar x ../../../pjproject-2.3/lib/libpjlib-util-mipsel-openwrt-linux-gnu.a
 cd ..
 
-ar rc p2p.a ./pjnath_obj/*.o ./miniupnp_obj/*.o ./pjlib_obj/*.o ./pjlib-util_obj/*.o
+ar rc p2p-openwrt-linux-mips.a ./pjnath_obj/*.o ./miniupnp_obj/*.o ./pjlib_obj/*.o ./pjlib-util_obj/*.o
 
 rm -rf pjnath_obj
 rm -rf miniupnp_obj

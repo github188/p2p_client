@@ -131,9 +131,9 @@ P2P_DECL(int) gss_dev_push_connect(gss_dev_push_conn_cfg* cfg, void** transport)
 #define GSS_CUSTOM_MAX_DATA (GSS_CUSTOM_DATA+32) //max custom data type 
 
 //send audio and video response data to server
-///type 0 video, 1 audio, 128-144 custom data type
+///type 0 video, 1 audio, 128-160 custom data type
 // is_key : frame is key frame
-P2P_DECL(int) gss_dev_push_send(void *transport, char* buf, int buffer_len, char type, unsigned int time_stamp, char is_key, p2p_send_model model);
+P2P_DECL(int) gss_dev_push_send(void *transport, char* buf, int buffer_len, unsigned char type, unsigned int time_stamp, char is_key, p2p_send_model model);
 
 //push audio and video to third rtmp server
 P2P_DECL(int) gss_dev_push_rtmp(void *transport, char* url);

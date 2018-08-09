@@ -170,7 +170,7 @@ int gss_dev_push_connect(gss_dev_push_conn_cfg* cfg, void** transport)
 }
 
 //send audio and video response data to device
-P2P_DECL(int) gss_dev_push_send(void *transport, char* buf, int buffer_len, char type, unsigned int time_stamp, char is_key, p2p_send_model model)
+P2P_DECL(int) gss_dev_push_send(void *transport, char* buf, int buffer_len, unsigned char type, unsigned int time_stamp, char is_key, p2p_send_model model)
 {
 	gss_dev_push_conn *conn = (gss_dev_push_conn *)transport;
 	unsigned char cmd;
