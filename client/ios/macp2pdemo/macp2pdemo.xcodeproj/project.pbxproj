@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7C7C20471C291F7000E2F757 /* libmacp2p.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C7C20461C291F7000E2F757 /* libmacp2p.a */; };
+		F6026F9320E7753C00311258 /* inifile.c in Sources */ = {isa = PBXBuildFile; fileRef = F6026F9120E7753C00311258 /* inifile.c */; };
+		F6026F9420E7753C00311258 /* path.c in Sources */ = {isa = PBXBuildFile; fileRef = F6026F9220E7753C00311258 /* path.c */; };
 		F61C74381FA865360008158F /* p2pdemo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F61C74371FA865360008158F /* p2pdemo.cpp */; };
 		F63125941FBBDF7200CF5B89 /* tm.c in Sources */ = {isa = PBXBuildFile; fileRef = F63125931FBBDF7200CF5B89 /* tm.c */; };
 /* End PBXBuildFile section */
@@ -27,6 +29,8 @@
 /* Begin PBXFileReference section */
 		7C7C20461C291F7000E2F757 /* libmacp2p.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmacp2p.a; path = ../macp2p/build/Debug/libmacp2p.a; sourceTree = "<group>"; };
 		7C7ECFF91B846CFA00FB2DA2 /* macp2pdemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = macp2pdemo; sourceTree = BUILT_PRODUCTS_DIR; };
+		F6026F9120E7753C00311258 /* inifile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = inifile.c; path = ../../../../common/inifile.c; sourceTree = "<group>"; };
+		F6026F9220E7753C00311258 /* path.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = path.c; path = ../../../../common/path.c; sourceTree = "<group>"; };
 		F61C74371FA865360008158F /* p2pdemo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p2pdemo.cpp; path = ../../../sdk/p2pdemo/p2pdemo.cpp; sourceTree = "<group>"; };
 		F63125931FBBDF7200CF5B89 /* tm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tm.c; path = ../../../../common/tm.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -63,6 +67,8 @@
 		7C7ECFFB1B846CFA00FB2DA2 /* macp2pdemo */ = {
 			isa = PBXGroup;
 			children = (
+				F6026F9120E7753C00311258 /* inifile.c */,
+				F6026F9220E7753C00311258 /* path.c */,
 				F63125931FBBDF7200CF5B89 /* tm.c */,
 				F61C74371FA865360008158F /* p2pdemo.cpp */,
 			);
@@ -125,8 +131,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F6026F9420E7753C00311258 /* path.c in Sources */,
 				F63125941FBBDF7200CF5B89 /* tm.c in Sources */,
 				F61C74381FA865360008158F /* p2pdemo.cpp in Sources */,
+				F6026F9320E7753C00311258 /* inifile.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

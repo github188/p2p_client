@@ -128,6 +128,9 @@
 		7C88C91D1F8B1BBC00E03E4D /* rbtree.c in Sources */ = {isa = PBXBuildFile; fileRef = 7C88C9151F8B1BBC00E03E4D /* rbtree.c */; };
 		7CAEB7EA1C745CD4006DAC56 /* p2p_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CAEB7E81C745CD4006DAC56 /* p2p_pool.cpp */; };
 		7CAEB7EB1C745CD4006DAC56 /* p2p_tcp.c in Sources */ = {isa = PBXBuildFile; fileRef = 7CAEB7E91C745CD4006DAC56 /* p2p_tcp.c */; };
+		7CEC0BB21FE3D4D700F259E8 /* p2p_smooth.c in Sources */ = {isa = PBXBuildFile; fileRef = 7CEC0BB11FE3D4D700F259E8 /* p2p_smooth.c */; };
+		F6026F8A20E7744C00311258 /* p2p_udp_proxy.c in Sources */ = {isa = PBXBuildFile; fileRef = F6026F8920E7744C00311258 /* p2p_udp_proxy.c */; };
+		F6026F9020E774EB00311258 /* p2p_port_guess.c in Sources */ = {isa = PBXBuildFile; fileRef = F6026F8F20E774EB00311258 /* p2p_port_guess.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -253,6 +256,9 @@
 		7C88C9151F8B1BBC00E03E4D /* rbtree.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rbtree.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/rbtree.c"; sourceTree = "<group>"; };
 		7CAEB7E81C745CD4006DAC56 /* p2p_pool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p2p_pool.cpp; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_pool.cpp"; sourceTree = "<group>"; };
 		7CAEB7E91C745CD4006DAC56 /* p2p_tcp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_tcp.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_tcp.c"; sourceTree = "<group>"; };
+		7CEC0BB11FE3D4D700F259E8 /* p2p_smooth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_smooth.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_smooth.c"; sourceTree = "<group>"; };
+		F6026F8920E7744C00311258 /* p2p_udp_proxy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_udp_proxy.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_udp_proxy.c"; sourceTree = "<group>"; };
+		F6026F8F20E774EB00311258 /* p2p_port_guess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_port_guess.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_port_guess.c"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -297,6 +303,9 @@
 		7C7ECF0B1B846A5200FB2DA2 /* pjnath */ = {
 			isa = PBXGroup;
 			children = (
+				F6026F8F20E774EB00311258 /* p2p_port_guess.c */,
+				F6026F8920E7744C00311258 /* p2p_udp_proxy.c */,
+				7CEC0BB11FE3D4D700F259E8 /* p2p_smooth.c */,
 				7C88C90E1F8B1BBC00E03E4D /* gss_client_av_conn.c */,
 				7C88C90F1F8B1BBC00E03E4D /* gss_client_pull_conn.c */,
 				7C88C9101F8B1BBC00E03E4D /* gss_client_signaling_conn.c */,
@@ -538,6 +547,7 @@
 				7C7ECF6D1B846A7000FB2DA2 /* array.c in Sources */,
 				7C7ECFED1B846A8900FB2DA2 /* stun_simple.c in Sources */,
 				7C7ECF6B1B846A7000FB2DA2 /* activesock.c in Sources */,
+				F6026F9020E774EB00311258 /* p2p_port_guess.c in Sources */,
 				7C7ECF6C1B846A7000FB2DA2 /* addr_resolv_sock.c in Sources */,
 				7C7ECFEC1B846A8900FB2DA2 /* stun_simple_client.c in Sources */,
 				7C7ECFE21B846A8900FB2DA2 /* hmac_md5.c in Sources */,
@@ -566,6 +576,7 @@
 				7C7ECF7D1B846A7000FB2DA2 /* log.c in Sources */,
 				7C7ECF101B846A5200FB2DA2 /* nat_detect.c in Sources */,
 				7C7ECF8B1B846A7000FB2DA2 /* rbtree.c in Sources */,
+				F6026F8A20E7744C00311258 /* p2p_udp_proxy.c in Sources */,
 				7C88C9191F8B1BBC00E03E4D /* gss_conn.c in Sources */,
 				7C7ECFEB1B846A8900FB2DA2 /* string.c in Sources */,
 				7C7ECF3C1B846A6A00FB2DA2 /* StreamData.cpp in Sources */,
@@ -609,6 +620,7 @@
 				7C7ECFBE1B846A8300FB2DA2 /* miniwget.c in Sources */,
 				7C7ECF1D1B846A5200FB2DA2 /* stun_sock.c in Sources */,
 				7C7ECF731B846A7000FB2DA2 /* file_access_unistd.c in Sources */,
+				7CEC0BB21FE3D4D700F259E8 /* p2p_smooth.c in Sources */,
 				7C7ECF201B846A5200FB2DA2 /* turn_sock.c in Sources */,
 				7C7ECF881B846A7000FB2DA2 /* pool_policy_malloc.c in Sources */,
 				7C7ECF381B846A6A00FB2DA2 /* list.cpp in Sources */,

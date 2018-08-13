@@ -101,6 +101,8 @@ void gss_conn_disconnect_server(gss_conn *conn);
 
 int gss_conn_send(gss_conn* conn, char* buf, int buffer_len, char* prefix, int prefix_len, unsigned char cmd, p2p_send_model model);
 
+int gss_conn_send_custom_data(gss_conn* conn, char* buf, int buffer_len);
+
 void gss_conn_pause_recv(gss_conn* conn, int is_pause);
 
 //clean all send buffer data

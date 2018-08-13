@@ -5,6 +5,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := p2pJni
 
+$(shell cp -rf $(SOURCE_PATH)/miniupnpc-1.9.20150206/miniupnpcstrings.h.in $(SOURCE_PATH)/miniupnpc-1.9.20150206/miniupnpcstrings.h) 
+
 LOCAL_C_INCLUDES := \
 $(LOCAL_PATH)/$(SOURCE_PATH)/miniupnpc-1.9.20150206/ \
 $(LOCAL_PATH)/$(SOURCE_PATH)/pjproject-2.3/pjlib/include \
@@ -143,7 +145,6 @@ $(SOURCE_PATH)/udt4.11/src/StreamData.cpp \
 $(SOURCE_PATH)/udt4.11/src/window.cpp \
 P2PClient.c \
 JniCallback.c \
-
 
 LOCAL_CPPFLAGS += -fexceptions -DP2P_CROSS_PLATFORM -DPJ_M_I386 -DPJ_SOCK_HAS_INET_NTOP=1 -DPJ_HAS_STDLIB_H -DANDROID_BUILD
 LOCAL_CFLAGS += -DP2P_CROSS_PLATFORM -DPJ_M_I386 -DPJ_SOCK_HAS_INET_NTOP=1 -DPJ_HAS_STDLIB_H -DANDROID_BUILD

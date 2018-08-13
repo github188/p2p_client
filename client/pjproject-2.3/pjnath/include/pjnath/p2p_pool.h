@@ -12,7 +12,9 @@
 #endif
 #include <stdio.h>
 
+#ifdef PJ_ARM_MIPS
 #define USE_P2P_POOL 1 //only in arm linux device,use this macro definition
+#endif
 
 #ifdef USE_P2P_POOL
 

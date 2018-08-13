@@ -11,7 +11,7 @@ chmod +x configure
 chmod +x aconfigure
 make clean
 DIR="$( cd "$( dirname "$0"  )" && pwd  )"
-./configure --prefix=$DIR --host=mipsel-openwrt-linux CC=mipsel-openwrt-linux-gcc --enable-epoll
+./configure --prefix=$DIR --host=mipsel-openwrt-linux CC=mipsel-openwrt-linux-gcc --enable-epoll CXXFLAGS=-DPJ_ARM_MIPS
 
 cd pjlib/build/
 make 

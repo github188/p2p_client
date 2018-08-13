@@ -202,6 +202,14 @@ P2P_DECL(int) gss_dev_push_send(void *transport, char* buf, int buffer_len, unsi
 	return gss_conn_send(conn->gssc, buf, buffer_len, (char*)&time_stamp, sizeof(unsigned int), cmd, model);
 }
 
+//send custom data, p2p library do not add data header, direct send to peer
+P2P_DECL(int) gss_dev_push_send_custom(void *transport, char* buf, int buffer_len)
+{
+	gss_dev_push_conn *conn = (gss_dev_push_conn *)transport;
+	if(!conn)
+		return PJ_EINVAL;
+	return gss_conn_send_custom_data(conn->gssc, buf, buffer_len);
+}
 //destroy device audio and video push stream connection
 P2P_DECL(void) gss_dev_push_destroy(void* transport)
 { 

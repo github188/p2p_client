@@ -18,4 +18,8 @@ make clean
 cd ../../
 
 rm -f lib/*.a
+
+cd ../android/jni
+ndk-build clean
+cd ../..
 echo "gss make clean ok"

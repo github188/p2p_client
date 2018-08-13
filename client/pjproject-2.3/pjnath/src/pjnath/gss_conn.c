@@ -389,10 +389,8 @@ PJ_INLINE(p2p_tcp_data*)  gss_conn_malloc_send_data(char* buf, int buffer_len, c
 	return data;
 }
 
-static void gss_conn_send_cmd(gss_conn *conn, char* buf, int buffer_len, char* prefix, int prefix_len, unsigned char cmd, unsigned char data_seq)  
+static void gss_conn_send_data(gss_conn *conn, p2p_tcp_data* data)
 {
-	p2p_tcp_data* data = gss_conn_malloc_send_data(buf, buffer_len, prefix, prefix_len, cmd, data_seq);  
-
 	if(conn->send_data_first)//the socket connection's send queue already has data, so cache it
 	{
 		conn->send_data_last->next = data;
@@ -406,7 +404,7 @@ static void gss_conn_send_cmd(gss_conn *conn, char* buf, int buffer_len, char* p
 		pj_status_t status = PJ_SUCCESS;
 		pj_activesock_t *activesock = conn->activesock;
 		pj_ioqueue_op_key_t* send_key = &conn->send_key;
-		
+
 		if(activesock)
 			status = pj_activesock_send(activesock, send_key, data->buffer, &size, 0);
 
@@ -433,6 +431,41 @@ static void gss_conn_send_cmd(gss_conn *conn, char* buf, int buffer_len, char* p
 			}			
 		}
 	}
+}
+
+static void gss_conn_send_cmd(gss_conn *conn, char* buf, int buffer_len, char* prefix, int prefix_len, unsigned char cmd, unsigned char data_seq)  
+{
+	p2p_tcp_data* data = gss_conn_malloc_send_data(buf, buffer_len, prefix, prefix_len, cmd, data_seq);  
+
+	gss_conn_send_data(conn, data);
+}
+
+int gss_conn_send_custom_data(gss_conn* conn, char* buf, int buffer_len)
+{
+	p2p_tcp_data* data;
+	if(conn == 0  || conn->destroy_req || buffer_len > GSS_MAX_CMD_LEN)
+		return PJ_EINVAL;
+
+	if(conn->conn_status != GSS_CONN_CONNECTED
+		|| conn->activesock == NULL 
+		|| conn->sock == PJ_INVALID_SOCKET)
+	{
+		return PJ_EGONE;
+	}
+
+	data = (p2p_tcp_data*)p2p_malloc(sizeof(p2p_tcp_data)+buffer_len);
+
+	data->buffer = (char*)data + sizeof(p2p_tcp_data);
+	data->next = NULL;
+	data->pos = 0;
+	data->buffer_len = buffer_len;
+	memcpy(data->buffer, buf, buffer_len);
+
+	pj_mutex_lock(conn->send_mutex);
+	gss_conn_send_data(conn, data);
+	pj_mutex_unlock(conn->send_mutex);
+
+	return PJ_SUCCESS;
 }
 
 static void gss_conn_heart_timer(pj_timer_heap_t *th, pj_timer_entry *e)
@@ -658,8 +691,9 @@ int gss_conn_send(gss_conn* conn, char* buf, int buffer_len, char* prefix, int p
 	if(conn == 0  || conn->destroy_req || prefix_len > GSS_MAX_PREFIX_LEN)
 		return PJ_EINVAL;
 
-	if(!conn || conn->destroy_req || conn->conn_status != GSS_CONN_CONNECTED
-		|| conn->activesock == NULL || conn->sock == PJ_INVALID_SOCKET)
+	if(conn->conn_status != GSS_CONN_CONNECTED
+		|| conn->activesock == NULL 
+		|| conn->sock == PJ_INVALID_SOCKET)
 	{
 		return PJ_EGONE;
 	}

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-Version="v1.5.120"
+Version="v1.5.130"
 OutPath="out"
 if [ ! -x "$OutPath" ]; then  
   mkdir "$OutPath" 
@@ -40,7 +40,6 @@ cd ../..
 cp -rf sdk/include $OutPath
 cp -rf sdk/p2pdemo/*.a $OutPath
 cp -rf android/libs $OutPath
-cp -rf ../common $OutPath
 
 cd $OutPath
 tar zcvf p2p-hisiv300-$Version.tar.gz include/ p2p-hisiv300.a

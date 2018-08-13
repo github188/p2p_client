@@ -1,4 +1,4 @@
-export PJDIR := /home/donyj/workspace/p2p_client/client/pjproject-2.3
+export PJDIR := /home/donyj/workspace/gitee/p2p_project/client/pjproject-2.3
 include $(PJDIR)/version.mak
 export PJ_DIR := $(PJDIR)
 
@@ -12,7 +12,7 @@ export CROSS_COMPILE := mipsel-openwrt-linux-
 export LINUX_POLL := select 
 export SHLIB_SUFFIX := so
 
-export prefix := /home/donyj/workspace/p2p_client/client/pjproject-2.3
+export prefix := /home/donyj/workspace/gitee/p2p_project/client/pjproject-2.3
 export exec_prefix := ${prefix}
 export includedir := ${prefix}/include
 export libdir := ${exec_prefix}/lib
@@ -280,7 +280,7 @@ export PJ_LIBXX_FILES := $(APP_LIBXX_FILES)
 
 # And here are the variables to use if application is using the
 # library from the install location (i.e. --prefix)
-export PJ_INSTALL_DIR := /home/donyj/workspace/p2p_client/client/pjproject-2.3
+export PJ_INSTALL_DIR := /home/donyj/workspace/gitee/p2p_project/client/pjproject-2.3
 export PJ_INSTALL_INC_DIR := ${prefix}/include
 export PJ_INSTALL_LIB_DIR := ${exec_prefix}/lib
 export PJ_INSTALL_CFLAGS := -I$(PJ_INSTALL_INC_DIR) -DPJ_AUTOCONF=1	-O2 -DPJ_IS_BIG_ENDIAN=0 -DPJ_IS_LITTLE_ENDIAN=1

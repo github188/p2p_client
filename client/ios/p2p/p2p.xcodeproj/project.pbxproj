@@ -128,6 +128,9 @@
 		7CC48EA71AB6B47B00210FA6 /* stun_transaction.c in Sources */ = {isa = PBXBuildFile; fileRef = 7CC48E931AB6B47B00210FA6 /* stun_transaction.c */; };
 		7CC48EA81AB6B47B00210FA6 /* turn_session.c in Sources */ = {isa = PBXBuildFile; fileRef = 7CC48E941AB6B47B00210FA6 /* turn_session.c */; };
 		7CC48EA91AB6B47B00210FA6 /* turn_sock.c in Sources */ = {isa = PBXBuildFile; fileRef = 7CC48E951AB6B47B00210FA6 /* turn_sock.c */; };
+		7CEC0BB01FE3D46000F259E8 /* p2p_smooth.c in Sources */ = {isa = PBXBuildFile; fileRef = 7CEC0BAF1FE3D46000F259E8 /* p2p_smooth.c */; };
+		F6026F8C20E7747600311258 /* p2p_udp_proxy.c in Sources */ = {isa = PBXBuildFile; fileRef = F6026F8B20E7747600311258 /* p2p_udp_proxy.c */; };
+		F6026F8E20E774CC00311258 /* p2p_port_guess.c in Sources */ = {isa = PBXBuildFile; fileRef = F6026F8D20E774CC00311258 /* p2p_port_guess.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -265,6 +268,9 @@
 		7CC48E931AB6B47B00210FA6 /* stun_transaction.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stun_transaction.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/stun_transaction.c"; sourceTree = "<group>"; };
 		7CC48E941AB6B47B00210FA6 /* turn_session.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = turn_session.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/turn_session.c"; sourceTree = "<group>"; };
 		7CC48E951AB6B47B00210FA6 /* turn_sock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = turn_sock.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/turn_sock.c"; sourceTree = "<group>"; };
+		7CEC0BAF1FE3D46000F259E8 /* p2p_smooth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_smooth.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_smooth.c"; sourceTree = "<group>"; };
+		F6026F8B20E7747600311258 /* p2p_udp_proxy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_udp_proxy.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_udp_proxy.c"; sourceTree = "<group>"; };
+		F6026F8D20E774CC00311258 /* p2p_port_guess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = p2p_port_guess.c; path = "../../../pjproject-2.3/pjnath/src/pjnath/p2p_port_guess.c"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -427,6 +433,9 @@
 		7CC48E811AB6B43900210FA6 /* pjnath */ = {
 			isa = PBXGroup;
 			children = (
+				F6026F8D20E774CC00311258 /* p2p_port_guess.c */,
+				F6026F8B20E7747600311258 /* p2p_udp_proxy.c */,
+				7CEC0BAF1FE3D46000F259E8 /* p2p_smooth.c */,
 				7CAEB7E61C745CA4006DAC56 /* p2p_pool.cpp */,
 				7C88C8FB1F8B1B5A00E03E4D /* gss_client_av_conn.c */,
 				7C88C8FC1F8B1B5A00E03E4D /* gss_client_pull_conn.c */,
@@ -535,6 +544,7 @@
 				7C8A256A1AB679B2005625F1 /* guid.c in Sources */,
 				7C8A25271AB678B2005625F1 /* igd_desc_parse.c in Sources */,
 				7CC48E741AB6B42000210FA6 /* buffer.cpp in Sources */,
+				F6026F8E20E774CC00311258 /* p2p_port_guess.c in Sources */,
 				7CC48E9F1AB6B47B00210FA6 /* p2p_udt.cpp in Sources */,
 				7CAEB7E51C745C7A006DAC56 /* p2p_tcp.c in Sources */,
 				7C8A252A1AB678B2005625F1 /* miniwget.c in Sources */,
@@ -563,6 +573,7 @@
 				7C8A25601AB679B2005625F1 /* addr_resolv_sock.c in Sources */,
 				7C8A25891AB679B2005625F1 /* string.c in Sources */,
 				7C8A252F1AB678B2005625F1 /* upnperrors.c in Sources */,
+				F6026F8C20E7747600311258 /* p2p_udp_proxy.c in Sources */,
 				7C88C9061F8B1B5A00E03E4D /* gss_conn.c in Sources */,
 				7CC48EA91AB6B47B00210FA6 /* turn_sock.c in Sources */,
 				7C8A252E1AB678B2005625F1 /* upnpcommands.c in Sources */,
@@ -606,6 +617,7 @@
 				7C8A25181AB67841005625F1 /* symbols.c in Sources */,
 				7C8A25691AB679B2005625F1 /* guid_simple.c in Sources */,
 				7CC48E791AB6B42000210FA6 /* core.cpp in Sources */,
+				7CEC0BB01FE3D46000F259E8 /* p2p_smooth.c in Sources */,
 				7C8A25831AB679B2005625F1 /* sock_qos_bsd.c in Sources */,
 				7CC48E751AB6B42000210FA6 /* cache.cpp in Sources */,
 				7C8A257B1AB679B2005625F1 /* pool_caching.c in Sources */,

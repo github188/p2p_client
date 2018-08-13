@@ -15,7 +15,7 @@ make clean
 echo "make clean"
 DIR="$( cd "$( dirname "$0"  )" && pwd  )"
 echo $DIR
-./configure --prefix=$DIR --enable-epoll
+./configure --prefix=$DIR --enable-epoll --disable-ssl
 
 cd pjlib/build/
 make 
