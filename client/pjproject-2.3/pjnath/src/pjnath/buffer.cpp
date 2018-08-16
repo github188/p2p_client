@@ -37,13 +37,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 03/12/2011
 *****************************************************************************/
+#include "buffer.h"
+#ifndef USE_P2P_TCP 
 
 #include <cstring>
 #include <cmath>
-#include "buffer.h"
 #include <pjlib.h>
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
+
 namespace UDT_P2P
 {
 

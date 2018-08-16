@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 07/09/2011
 *****************************************************************************/
-
 #ifdef WIN32
    #include <winsock2.h>
    #include <ws2tcpip.h>
@@ -47,13 +46,14 @@ written by
 #else
    #include <unistd.h>
 #endif
-#include <cstring>
+
 #include "api.h"
+#ifndef USE_P2P_TCP 
+
+#include <cstring>
 #include "core.h"
 #include <pjlib.h>
 #include <pjnath/p2p_pool.h>
-
-#ifndef USE_P2P_TCP 
 
 #ifdef USE_P2P_POOL
 void *operator new[](size_t size)

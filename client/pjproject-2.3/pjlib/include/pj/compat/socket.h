@@ -84,7 +84,11 @@
 #endif
 
 #if defined(PJ_HAS_LINUX_SOCKET_H) && PJ_HAS_LINUX_SOCKET_H != 0
+#ifdef __LITEOS__
+#  include <liteos/socket.h>
+#else
 #  include <linux/socket.h>
+#endif
 #endif
 
 #if defined(PJ_HAS_SYS_SELECT_H) && PJ_HAS_SYS_SELECT_H != 0

@@ -38,7 +38,12 @@ written by
    Yunhong Gu, last updated 07/25/2010
 *****************************************************************************/
 
+#ifdef WIN32
+   #include <winsock2.h>
+#endif
 
+#include "common.h"
+#ifndef USE_P2P_TCP 
 #ifndef WIN32
    #include <cstring>
    #include <cerrno>
@@ -47,7 +52,6 @@ written by
       #include <mach/mach_time.h>
    #endif
 #else
-   #include <winsock2.h>
    #include <ws2tcpip.h>
    #ifdef LEGACY_WIN32
       #include <wspiapi.h>
@@ -56,10 +60,8 @@ written by
 
 #include <cmath>
 #include "md5.h"
-#include "common.h"
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
+
 
 namespace UDT_P2P
 {
@@ -702,7 +704,7 @@ bool CIPAddress::ipcmp(const sockaddr* addr1, const sockaddr* addr2, int ver)
       sockaddr_in* a1 = (sockaddr_in*)addr1;
       sockaddr_in* a2 = (sockaddr_in*)addr2;
 
-      if ((a1->sin_port == a2->sin_port) && (a1->sin_addr.s_addr == a2->sin_addr.s_addr))
+      if ((a1->sin_port == a2->sin_port) && (a1->sin_addr.S_un.S_addr == a2->sin_addr.S_un.S_addr))
          return true;
    }
    else
@@ -728,15 +730,15 @@ void CIPAddress::ntop(const sockaddr* addr, uint32_t ip[4], int ver)
    if (AF_INET == ver)
    {
       sockaddr_in* a = (sockaddr_in*)addr;
-      ip[0] = a->sin_addr.s_addr;
+      ip[0] = a->sin_addr.S_un.S_addr;
    }
    else
    {
       sockaddr_in6* a = (sockaddr_in6*)addr;
-      ip[3] = (a->sin6_addr.s6_addr[15] << 24) + (a->sin6_addr.s6_addr[14] << 16) + (a->sin6_addr.s6_addr[13] << 8) + a->sin6_addr.s6_addr[12];
-      ip[2] = (a->sin6_addr.s6_addr[11] << 24) + (a->sin6_addr.s6_addr[10] << 16) + (a->sin6_addr.s6_addr[9] << 8) + a->sin6_addr.s6_addr[8];
-      ip[1] = (a->sin6_addr.s6_addr[7] << 24) + (a->sin6_addr.s6_addr[6] << 16) + (a->sin6_addr.s6_addr[5] << 8) + a->sin6_addr.s6_addr[4];
-      ip[0] = (a->sin6_addr.s6_addr[3] << 24) + (a->sin6_addr.s6_addr[2] << 16) + (a->sin6_addr.s6_addr[1] << 8) + a->sin6_addr.s6_addr[0];
+      ip[3] = (a->sin6_addr._S6_un._S6_u8[15] << 24) + (a->sin6_addr._S6_un._S6_u8[14] << 16) + (a->sin6_addr._S6_un._S6_u8[13] << 8) + a->sin6_addr._S6_un._S6_u8[12];
+      ip[2] = (a->sin6_addr._S6_un._S6_u8[11] << 24) + (a->sin6_addr._S6_un._S6_u8[10] << 16) + (a->sin6_addr._S6_un._S6_u8[9] << 8) + a->sin6_addr._S6_un._S6_u8[8];
+      ip[1] = (a->sin6_addr._S6_un._S6_u8[7] << 24) + (a->sin6_addr._S6_un._S6_u8[6] << 16) + (a->sin6_addr._S6_un._S6_u8[5] << 8) + a->sin6_addr._S6_un._S6_u8[4];
+      ip[0] = (a->sin6_addr._S6_un._S6_u8[3] << 24) + (a->sin6_addr._S6_un._S6_u8[2] << 16) + (a->sin6_addr._S6_un._S6_u8[1] << 8) + a->sin6_addr._S6_un._S6_u8[0];
    }
 }
 
@@ -745,17 +747,17 @@ void CIPAddress::pton(sockaddr* addr, const uint32_t ip[4], int ver)
    if (AF_INET == ver)
    {
       sockaddr_in* a = (sockaddr_in*)addr;
-      a->sin_addr.s_addr = ip[0];
+      a->sin_addr.S_un.S_addr = ip[0];
    }
    else
    {
       sockaddr_in6* a = (sockaddr_in6*)addr;
       for (int i = 0; i < 4; ++ i)
       {
-         a->sin6_addr.s6_addr[i * 4] = ip[i] & 0xFF;
-         a->sin6_addr.s6_addr[i * 4 + 1] = (unsigned char)((ip[i] & 0xFF00) >> 8);
-         a->sin6_addr.s6_addr[i * 4 + 2] = (unsigned char)((ip[i] & 0xFF0000) >> 16);
-         a->sin6_addr.s6_addr[i * 4 + 3] = (unsigned char)((ip[i] & 0xFF000000) >> 24);
+         a->sin6_addr._S6_un._S6_u8[i * 4] = ip[i] & 0xFF;
+         a->sin6_addr._S6_un._S6_u8[i * 4 + 1] = (unsigned char)((ip[i] & 0xFF00) >> 8);
+         a->sin6_addr._S6_un._S6_u8[i * 4 + 2] = (unsigned char)((ip[i] & 0xFF0000) >> 16);
+         a->sin6_addr._S6_un._S6_u8[i * 4 + 3] = (unsigned char)((ip[i] & 0xFF000000) >> 24);
       }
    }
 }

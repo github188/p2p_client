@@ -38,6 +38,13 @@ written by
    Yunhong Gu, last updated 02/28/2012
 *****************************************************************************/
 
+#ifdef WIN32
+#include <winsock2.h>
+#endif
+
+#include "core.h"
+#ifndef USE_P2P_TCP 
+
 #ifndef WIN32
    #include <unistd.h>
    #include <netdb.h>
@@ -46,22 +53,17 @@ written by
    #include <cstring>
    #include <cstdlib>
 #else
-   #include <winsock2.h>
    #include <ws2tcpip.h>
    #ifdef LEGACY_WIN32
       #include <wspiapi.h>
    #endif
 #endif
+
 #include <cmath>
 #include <sstream>
 #include "queue.h"
-#include "core.h"
 #include <pjlib.h>
-
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
-
 
 namespace UDT_P2P
 {

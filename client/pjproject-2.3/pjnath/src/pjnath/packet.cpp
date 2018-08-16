@@ -142,12 +142,12 @@ written by
 //      For any single loss or consectutive loss less than 2 packets, use
 //      the original sequence numbers in the field.
 
+#include "packet.h"
+#ifndef USE_P2P_TCP 
 
 #include <cstring>
-#include "packet.h"
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
+
 
 namespace UDT_P2P
 {

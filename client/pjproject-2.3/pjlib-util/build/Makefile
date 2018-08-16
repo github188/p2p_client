@@ -2,6 +2,10 @@
 # OS make file may override this with os-specific files
 export UTIL_TEST_OBJS = main.o
 
+ifeq (TRUE,$(LITEOS_BUILD))
+include ../../../MakefileLiteOS.param
+endif
+
 include ../../build.mak
 include ../../version.mak
 include $(PJDIR)/build/common.mak
@@ -63,7 +67,8 @@ export CC_OUT CC AR RANLIB HOST_MV HOST_RM HOST_RMDIR HOST_MKDIR OBJEXT LD LDOUT
 TARGETS := $(PJLIB_UTIL_LIB) $(PJLIB_UTIL_SONAME)
 TARGETS_EXE := $(UTIL_TEST_EXE)
 
-all: $(TARGETS) $(TARGETS_EXE)
+all: $(TARGETS)
+#$(TARGETS_EXE)
 
 lib: $(TARGETS)
 

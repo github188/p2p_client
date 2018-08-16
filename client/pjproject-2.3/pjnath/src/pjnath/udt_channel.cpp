@@ -37,6 +37,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 01/27/2011
 *****************************************************************************/
+#include "channel.h"
+#ifndef USE_P2P_TCP 
 
 #ifndef WIN32
    #include <netdb.h>
@@ -54,9 +56,6 @@ written by
    #endif
 #endif
 
-#ifndef USE_P2P_TCP 
-
-#include "channel.h"
 #include "packet.h"
 
 #ifdef WIN32

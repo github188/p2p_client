@@ -13,6 +13,7 @@ cd ..
 mkdir pjlib_obj
 cd pjlib_obj
 ar x ../../../pjproject-2.3/lib/libpj-arm-hisiv500-linux-gnu.a
+rm ioqueue_epoll.o
 cd ..
 
 mkdir pjlib-util_obj

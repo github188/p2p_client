@@ -37,14 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 01/22/2011
 *****************************************************************************/
+#include "window.h"
+#ifndef USE_P2P_TCP 
 
 #include <cmath>
 #include "common.h"
-#include "window.h"
 #include <algorithm>
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
 
 namespace UDT_P2P
 {

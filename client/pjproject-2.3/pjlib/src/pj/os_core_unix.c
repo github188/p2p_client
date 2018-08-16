@@ -1043,7 +1043,10 @@ PJ_DEF(void) pj_thread_local_free(long index)
 {
     PJ_CHECK_STACK();
 #if PJ_HAS_THREADS
-    pthread_key_delete(index);
+#ifndef __LITEOS__
+	pthread_key_delete(index);
+#endif
+    
 #else
     tls_flag[index] = 0;
 #endif

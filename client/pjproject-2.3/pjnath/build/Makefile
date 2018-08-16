@@ -2,6 +2,10 @@
 # OS make file may override this with os-specific files
 export PJNATH_TEST_OBJS = main.o
 
+ifeq (TRUE,$(LITEOS_BUILD))
+include ../../../MakefileLiteOS.param
+endif
+
 include ../../build.mak
 include ../../version.mak
 include $(PJDIR)/build/common.mak
@@ -95,7 +99,8 @@ export CC_OUT CC AR RANLIB HOST_MV HOST_RM HOST_RMDIR HOST_MKDIR OBJEXT LD LDOUT
 TARGETS := $(PJNATH_LIB) $(PJNATH_SONAME)
 TARGETS_EXE := $(PJNATH_TEST_EXE) $(PJTURN_CLIENT_EXE) $(PJTURN_SRV_EXE)
 
-all: $(TARGETS) $(TARGETS_EXE)
+all: $(TARGETS)
+#$(TARGETS_EXE)
 
 lib: $(TARGETS)
 

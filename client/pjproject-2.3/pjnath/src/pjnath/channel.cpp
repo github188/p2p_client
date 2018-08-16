@@ -37,6 +37,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 01/27/2011
 *****************************************************************************/
+#ifdef WIN32
+#include <winsock2.h>
+#endif
+
+#include "channel.h"
+#ifndef USE_P2P_TCP 
 
 #ifndef WIN32
 	#include <netdb.h>
@@ -47,19 +53,16 @@ written by
 	#include <cstdio>
 	#include <cerrno>
 #else
-	#include <winsock2.h>
 	#include <ws2tcpip.h>
 		#ifdef LEGACY_WIN32
 	#include <wspiapi.h>
 	#endif
 #endif
 
-#include "channel.h"
 #include "packet.h"
 #include <pjnath/p2p_pool.h>
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
+
 
 #ifndef WIN32
 	#define P2P_RECV_TIMEOUT 10000

@@ -11,7 +11,8 @@ chmod +x configure
 chmod +x aconfigure
 make clean
 DIR="$( cd "$( dirname "$0"  )" && pwd  )"
-./configure --prefix=$DIR --host=arm-hisiv500-linux --enable-epoll CXXFLAGS=-DPJ_ARM_MIPS
+export LITEOS_BUILD=TRUE
+./configure --prefix=$DIR --host=arm-hisiv500-linux CXXFLAGS=-DPJ_ARM_MIPS CFLAGS=-DLITEOS
 
 cd pjlib/build/
 make 

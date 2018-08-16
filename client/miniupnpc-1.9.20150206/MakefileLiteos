@@ -10,6 +10,8 @@
 # $ INSTALLPREFIX=/usr/local make install
 # or
 # $ make install (default INSTALLPREFIX is /usr)
+include ../MakefileLiteOS.param
+
 OS = $(shell uname -s)
 VERSION = $(shell cat VERSION)
 
@@ -27,7 +29,7 @@ HAVE_IPV6 ?= yes
 export HAVE_IPV6
 
 CC = arm-hisiv500-linux-gcc
-#AR = gar
+AR = arm-hisiv500-linux-ar
 #CFLAGS = -O -g -DDEBUG
 CFLAGS ?= -O
 CFLAGS += -Wall
@@ -36,7 +38,7 @@ CFLAGS += -fno-common
 CFLAGS += -DMINIUPNPC_SET_SOCKET_TIMEOUT
 CFLAGS += -DMINIUPNPC_GET_SRC_ADDR
 CFLAGS += -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L
-CFLAGS += -ansi
+#CFLAGS += -ansi
 # -DNO_GETADDRINFO
 INSTALL = install
 SH = /bin/sh
@@ -140,7 +142,7 @@ endif
 	installpythonmodule updateversion
 #	validateminixml validateminiwget
 
-all:	$(LIBRARY) $(EXECUTABLES)
+all:	$(LIBRARY)
 
 test:	check
 
@@ -248,6 +250,9 @@ cleaninstall:
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- $(SRCS) 2>/dev/null
+
+%.o:%.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(LIBRARY):	$(LIBOBJS)
 	$(AR) crs $@ $?

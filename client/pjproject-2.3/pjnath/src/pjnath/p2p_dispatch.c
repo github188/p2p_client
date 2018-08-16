@@ -308,8 +308,9 @@ static int p2p_dispatch_create_socket(p2p_dispatch_requester* requester, int ind
 	int status;
 	pj_activesock_cfg activesock_cfg;
 	pj_activesock_cb activesock_cb;
+#ifndef __LITEOS__ 
 	struct linger so_linger;
-	
+#endif	
 	status = pj_sock_socket(requester->server_addr[index]->addr.sa_family, pj_SOCK_STREAM(), 0, &requester->sock[index]);
 	if(status != PJ_SUCCESS)
 	{
@@ -318,9 +319,11 @@ static int p2p_dispatch_create_socket(p2p_dispatch_requester* requester, int ind
 	}
 
 	/*load test disable socket TIME_WAIT*/
+#ifndef __LITEOS__ 
 	so_linger.l_onoff = 0;
 	so_linger.l_linger = 0;
 	status = setsockopt(requester->sock[index], SOL_SOCKET, SO_LINGER, (const char*)&so_linger, sizeof(so_linger));
+#endif
 
 	/* Init send_key */
 	pj_ioqueue_op_key_init(&requester->send_key[index], sizeof(requester->send_key[index]));
@@ -512,7 +515,7 @@ static int get_addr_info_thread(void *arg)
 	p2p_dispatch_requester* requester = aia->requester;
 	p2p_socket_pair_item item;
 
-	PJ_LOG(4,("get_addr_info_thread", "pj_getaddrinfo begin %p %d %s", requester, index, requester->server_addr_str[index]));
+	PJ_LOG(4,("get_addr_info_thread", "pj_getaddrinfo begin %p %d %.*s", requester, index, requester->server_addr_str[index].slen, requester->server_addr_str[index].ptr));
 	//maybe long time
 	aia->status = pj_getaddrinfo(
 		pj_AF_UNSPEC(),  //for support ipv6 and ipv4

@@ -37,6 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 01/01/2011
 *****************************************************************************/
+#include "common.h"
+#include "epoll.h"
+#ifndef USE_P2P_TCP 
 
 #ifdef LINUX
    #include <sys/epoll.h>
@@ -46,13 +49,9 @@ written by
 #include <cerrno>
 #include <cstring>
 #include <iterator>
-
-#include "common.h"
-#include "epoll.h"
 #include "udt.h"
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
+
 
 namespace UDT_P2P
 {

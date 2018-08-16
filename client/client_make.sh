@@ -15,6 +15,7 @@ make clean
 echo "make clean"
 DIR="$( cd "$( dirname "$0"  )" && pwd  )"
 echo $DIR
+export LITEOS_BUILD=FALSE
 ./configure --prefix=$DIR --enable-epoll --disable-ssl
 
 cd pjlib/build/

@@ -1,3 +1,7 @@
+ifeq (TRUE,$(LITEOS_BUILD))
+include ../../../MakefileLiteOS.param
+endif
+
 include ../../build.mak
 include ../../version.mak
 include $(PJDIR)/build/common.mak
@@ -66,7 +70,8 @@ export CC_OUT CC AR RANLIB HOST_MV HOST_RM HOST_RMDIR HOST_MKDIR OBJEXT LD LDOUT
 # $(TARGET) is defined in os-$(OS_NAME).mak file in current directory.
 #
 
-all: $(TARGETS) $(TARGETS_EXE)
+all: $(TARGETS)
+#$(TARGETS_EXE)
 
 lib: $(TARGETS)
 

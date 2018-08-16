@@ -39,10 +39,9 @@ written by
 *****************************************************************************/
 
 #include "list.h"
-
+#ifndef USE_P2P_TCP 
 
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
 
 namespace UDT_P2P
 {

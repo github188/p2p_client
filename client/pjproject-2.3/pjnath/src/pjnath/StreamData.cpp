@@ -1,7 +1,7 @@
 #include "StreamData.h"
-
-#include <pjnath/p2p_pool.h>
 #ifndef USE_P2P_TCP 
+#include <pjnath/p2p_pool.h>
+
 
 CStreamData::CStreamData(void)
 {

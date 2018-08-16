@@ -589,7 +589,12 @@
  * the underlying implementation changes.
  */
 #ifndef PJ_IOQUEUE_MAX_HANDLES
+#ifdef __LITEOS__ 
+#   define PJ_IOQUEUE_MAX_HANDLES	(64) //modify for p2p liteos
+#else
 #   define PJ_IOQUEUE_MAX_HANDLES	(1024) //modify for p2p
+#endif
+
 #endif
 
 

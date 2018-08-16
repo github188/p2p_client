@@ -38,6 +38,7 @@ written by
    Yunhong Gu, last updated 05/05/2009
 *****************************************************************************/
 
+
 #ifdef WIN32
    #include <winsock2.h>
    #include <ws2tcpip.h>
@@ -46,12 +47,13 @@ written by
    #endif
 #endif
 
-#include <cstring>
 #include "cache.h"
-#include "core.h"
 
-#include <pjnath/p2p_pool.h>
 #ifndef USE_P2P_TCP 
+#include <cstring>
+#include "core.h"
+#include <pjnath/p2p_pool.h>
+
 
 namespace UDT_P2P
 {
@@ -119,12 +121,12 @@ void CInfoBlock::convert(const sockaddr* addr, int ver, uint32_t ip[])
 {
    if (ver == AF_INET)
    {
-      ip[0] = ((sockaddr_in*)addr)->sin_addr.s_addr;
+      ip[0] = ((sockaddr_in*)addr)->sin_addr.S_un.S_addr;
       ip[1] = ip[2] = ip[3] = 0;
    }
    else
    {
-      memcpy((char*)ip, (char*)((sockaddr_in6*)addr)->sin6_addr.s6_addr, 16);
+      memcpy((char*)ip, (char*)((sockaddr_in6*)addr)->sin6_addr._S6_un._S6_u8, 16);
    }
 }
 

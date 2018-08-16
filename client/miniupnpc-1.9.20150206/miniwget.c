@@ -363,8 +363,9 @@ miniwget3(const char * host,
 			/* the following code is only compatible with ip v4 addresses */
 			strncpy(addr_str, inet_ntoa(((struct sockaddr_in *)&saddr)->sin_addr), addr_str_len);
 #else
-#if 0
-			if(saddr.sa_family == AF_INET6) {
+
+#ifdef __LITEOS__
+			if(saddr.ss_family == AF_INET6) {
 				inet_ntop(AF_INET6,
 				          &(((struct sockaddr_in6 *)&saddr)->sin6_addr),
 				          addr_str, addr_str_len);
@@ -373,7 +374,7 @@ miniwget3(const char * host,
 				          &(((struct sockaddr_in *)&saddr)->sin_addr),
 				          addr_str, addr_str_len);
 			}
-#endif
+#else
 			/* getnameinfo return ip v6 address with the scope identifier
 			 * such as : 2a01:e35:8b2b:7330::%4281128194 */
 			n = getnameinfo((const struct sockaddr *)&saddr, saddrlen,
@@ -387,8 +388,12 @@ miniwget3(const char * host,
 				fprintf(stderr, "getnameinfo() failed : %s\n", gai_strerror(n));
 #endif
 			}
-#endif
+#endif //__LITEOS__
+
+#endif //defined(__amigaos__) && !defined(__amigaos4__)
 		}
+
+
 #ifdef DEBUG
 		//modify by p2p
 		//printf("address miniwget : %s\n", addr_str);

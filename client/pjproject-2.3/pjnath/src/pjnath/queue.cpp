@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 written by
    Yunhong Gu, last updated 05/05/2011
 *****************************************************************************/
-
 #ifdef WIN32
    #include <winsock2.h>
    #include <ws2tcpip.h>
@@ -45,15 +44,15 @@ written by
       #include <wspiapi.h>
    #endif
 #endif
-#include <cstring>
 
+#include "queue.h"
+#ifndef USE_P2P_TCP 
+#include <cstring>
 #include "common.h"
 #include "core.h"
-#include "queue.h"
 #include <pjlib.h>
-
 #include <pjnath/p2p_pool.h>
-#ifndef USE_P2P_TCP 
+
 
 namespace UDT_P2P
 {

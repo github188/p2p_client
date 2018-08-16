@@ -415,7 +415,12 @@ upnpDiscoverDevices(const char * const deviceTypes[],
 		p->sin6_family = AF_INET6;
 		if(sameport)
 			p->sin6_port = htons(PORT);
+#ifdef __LITEOS__
+		memset(&p->sin6_addr, 0, sizeof(p->sin6_addr));
+#else
 		p->sin6_addr = in6addr_any; /* in6addr_any is not available with MinGW32 3.4.2 */
+#endif
+		
 	} else {
 		struct sockaddr_in * p = (struct sockaddr_in *)&sockudp_r;
 		p->sin_family = AF_INET;
@@ -621,7 +626,10 @@ upnpDiscoverDevices(const char * const deviceTypes[],
 #ifdef _WIN32
 			fprintf(stderr, "getaddrinfo() failed: %d\n", rv);
 #else
+#ifndef __LITEOS__ 
 			fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+#endif
+			
 #endif
 			break;
 		}

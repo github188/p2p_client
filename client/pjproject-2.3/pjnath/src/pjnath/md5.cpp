@@ -52,10 +52,11 @@
  */
 
 #include "md5.h"
-#include <string.h>
-
-#include <pjnath/p2p_pool.h>
 #ifndef USE_P2P_TCP 
+
+#include <string.h>
+#include <pjnath/p2p_pool.h>
+
 
 namespace UDT_P2P
 {

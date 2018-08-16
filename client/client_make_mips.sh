@@ -11,6 +11,7 @@ chmod +x configure
 chmod +x aconfigure
 make clean
 DIR="$( cd "$( dirname "$0"  )" && pwd  )"
+export LITEOS_BUILD=FALSE
 ./configure --prefix=$DIR --host=mips-linux-gnu CC=mips-linux-uclibc-gnu-gcc --enable-epoll CXXFLAGS=-DPJ_ARM_MIPS
 
 cd pjlib/build/

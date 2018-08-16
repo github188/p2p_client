@@ -177,7 +177,9 @@ int connecthostport(const char * host, unsigned short port,
 #ifdef _WIN32
 		fprintf(stderr, "getaddrinfo() error : %d\n", n);
 #else
+#ifndef __LITEOS__ 
 		fprintf(stderr, "getaddrinfo() error : %s\n", gai_strerror(n));
+#endif
 #endif
 		return -1;
 	}
