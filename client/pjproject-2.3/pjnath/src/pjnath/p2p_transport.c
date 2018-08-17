@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.5.130"
+#define P2P_VERSION "1.5.200"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
