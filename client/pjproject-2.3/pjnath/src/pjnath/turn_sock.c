@@ -61,6 +61,7 @@ struct pj_turn_sock
     pj_activesock_t	*active_sock;
     pj_ioqueue_op_key_t	 send_key;
 	pj_sock_t sock; //add for p2p
+	pj_bool_t		 is_connected;//add for p2p
 };
 
 
@@ -575,6 +576,8 @@ static pj_bool_t on_connect_complete(pj_activesock_t *asock,
 	PJ_LOG(5,(turn_sock->obj_name, "TCP connected"));
     }
 
+	turn_sock->is_connected = PJ_TRUE; //add by p2p
+
     /* Kick start pending read operation */
     status = pj_activesock_start_read(asock, turn_sock->pool, 
 				      turn_sock->setting.max_pkt_size, 0);
@@ -749,7 +752,7 @@ static pj_status_t turn_on_send_pkt(pj_turn_session *sess,
     pj_ssize_t len = pkt_len;
     pj_status_t status;
 
-    if (turn_sock == NULL || turn_sock->is_destroying) {
+    if (turn_sock == NULL || turn_sock->is_destroying || !turn_sock->is_connected) { //modify by p2p
 	/* We've been destroyed */
 	// https://trac.pjsip.org/repos/ticket/1316
 	//pj_assert(!"We should shutdown gracefully");

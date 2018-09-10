@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.5.310"
+#define P2P_VERSION "1.5.312"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -1415,9 +1415,9 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 
 	check_pj_thread();
 
-	if(user.ptr == 0 || transport == 0)
+	if(remote_user == 0 || transport == 0)
 		return PJ_EINVAL;
-	PJ_LOG(3,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect %s %p", transport, user.ptr, user_data));
+	PJ_LOG(3,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect %s %p", transport, remote_user, user_data));
 	if(!transport->connected || transport->destroy_req || transport->delay_destroy)
 	{
 		PJ_LOG(3,(transport->obj_name, "p2p transport %p PJ_EINVALIDOP %d %d %d", transport, transport->connected , transport->destroy_req , transport->delay_destroy));
