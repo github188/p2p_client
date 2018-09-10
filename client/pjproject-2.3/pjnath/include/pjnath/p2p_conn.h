@@ -149,7 +149,7 @@ typedef struct pj_ice_strans_p2p_conn
 
 pj_ice_strans_p2p_conn* create_p2p_conn(pj_str_t* proxy_add, pj_bool_t is_initiativer);
 void destroy_p2p_conn(pj_ice_strans_p2p_conn* conn);
-pj_status_t p2p_ice_send_data(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len);
+pj_status_t p2p_ice_send_data(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len, pj_uint8_t force_relay);
 void on_p2p_conn_recved_data(void* user_data, const char* receive_buffer, size_t buffer_len);
 void p2p_conn_get_peer_addr(pj_sockaddr_t* addr, void* user_data);
 void p2p_conn_get_sock_addr(pj_sockaddr_t* addr, void* user_data);

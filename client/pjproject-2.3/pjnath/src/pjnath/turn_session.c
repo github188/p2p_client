@@ -155,6 +155,9 @@ struct pj_turn_session
     pj_uint16_t		 next_ch;
 
 	pj_uint32_t      refresh_transmit_count;
+
+	//add by p2p
+	pj_uint8_t is_pending;
 };
 
 
@@ -307,6 +310,7 @@ PJ_DEF(pj_status_t) pj_turn_session_create( const pj_stun_config *cfg,
     sess->user_data = user_data;
     sess->next_ch = PJ_TURN_CHANNEL_MIN;
 	sess->refresh_transmit_count = 1;
+	sess->is_pending = 0;
     /* Copy STUN session */
     pj_memcpy(&sess->stun_cfg, cfg, sizeof(pj_stun_config));
 
@@ -1011,7 +1015,14 @@ PJ_DEF(pj_status_t) pj_turn_session_sendto( pj_turn_session *sess,
 
     /* Lock session now */
     pj_grp_lock_acquire(sess->grp_lock);
-
+	if(sess->is_pending)
+	{
+		pj_grp_lock_release(sess->grp_lock);
+		PJ_LOG(4,(sess->obj_name, "pj_turn_session_sendto is_pending"));
+		return PJ_EBUSY;
+	}
+	
+		
     /* Lookup permission first */
     perm = lookup_perm(sess, addr, pj_sockaddr_get_len(addr), PJ_FALSE);
     if (perm == NULL) {
@@ -1057,6 +1068,8 @@ PJ_DEF(pj_status_t) pj_turn_session_sendto( pj_turn_session *sess,
 	status = sess->cb.on_send_pkt(sess, sess->tx_pkt, total_len,
 				      sess->srv_addr,
 				      pj_sockaddr_get_len(sess->srv_addr));
+	if(status == PJ_EPENDING)
+		sess->is_pending = 1;
 
     } else {
 	/* Use Send Indication. */
@@ -1098,6 +1111,8 @@ PJ_DEF(pj_status_t) pj_turn_session_sendto( pj_turn_session *sess,
 				      (unsigned)send_ind_len,
 				      sess->srv_addr,
 				      pj_sockaddr_get_len(sess->srv_addr));
+	if(status == PJ_EPENDING)
+		sess->is_pending = 1;
     }
 
 on_return:
@@ -2399,4 +2414,10 @@ on_return:
 PJ_DECL(int) pj_ice_session_server_net_state(pj_turn_session *sess)
 {
 	return sess->refresh_transmit_count;
+}
+
+PJ_DECL(void) pj_turn_session_on_data_sent(pj_turn_session *sess,pj_ssize_t sent)
+{
+	PJ_UNUSED_ARG(sent);
+	sess->is_pending = 0;
 }

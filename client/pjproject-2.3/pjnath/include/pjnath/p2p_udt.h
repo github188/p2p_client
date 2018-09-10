@@ -15,7 +15,7 @@ typedef struct p2p_udt_accepter p2p_udt_accepter;
 
 typedef struct p2p_udt_cb
 {
-	pj_status_t (*udt_send)(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len);
+	pj_status_t (*udt_send)(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len, pj_uint8_t force_relay);
 	void (*udt_on_recved)(void* user_data, const char* buffer, size_t buffer_len);
 	pj_status_t (*udt_on_accept)(void* user_data, void* udt_sock, pj_sockaddr_t* addr);
 	void (*get_sock_addr)(pj_sockaddr_t* addr, void* user_data);

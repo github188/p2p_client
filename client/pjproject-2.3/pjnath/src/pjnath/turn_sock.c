@@ -637,6 +637,28 @@ static unsigned has_packet(pj_turn_sock *turn_sock, const void *buf, pj_size_t b
     }
 }
 
+pj_bool_t turn_on_data_sent(pj_activesock_t *asock,
+							pj_ioqueue_op_key_t *send_key,
+							pj_ssize_t sent)
+{
+
+	pj_turn_sock *turn_sock;
+	pj_bool_t ret = PJ_TRUE;
+
+	PJ_UNUSED_ARG(send_key);
+
+	turn_sock = (pj_turn_sock*) pj_activesock_get_user_data(asock);
+	if(!turn_sock)
+		return ret;
+	pj_grp_lock_acquire(turn_sock->grp_lock);
+	if (turn_sock->sess && !turn_sock->is_destroying) 
+	{
+		pj_turn_session_on_data_sent(turn_sock->sess, sent);
+	}
+	pj_grp_lock_release(turn_sock->grp_lock);
+	return ret;
+}
+
 /*
  * Notification from ioqueue when incoming UDP packet is received.
  */
@@ -674,6 +696,11 @@ static pj_bool_t on_data_read(pj_activesock_t *asock,
 	    //	      pkt_len, size));
 
 	    parsed_len = (unsigned)size;
+		if(!turn_sock->sess) //add by p2p,when use tcp disconnect server,turn_sock->sess may be set NULL
+		{
+			ret = PJ_FALSE; 
+			break;
+		}
 	    pj_turn_session_on_rx_pkt(turn_sock->sess, data,  size, &parsed_len);
 
 	    /* parsed_len may be zero if we have parsing error, so use our
@@ -934,6 +961,8 @@ static void turn_on_state(pj_turn_session *sess,
 	pj_bzero(&asock_cb, sizeof(asock_cb));
 	asock_cb.on_data_read = &on_data_read;
 	asock_cb.on_connect_complete = &on_connect_complete;
+	if (turn_sock->conn_type == PJ_TURN_TP_TCP)
+		asock_cb.on_data_sent = &turn_on_data_sent;
 	status = pj_activesock_create(turn_sock->pool, sock,
 				      sock_type, &asock_cfg,
 				      turn_sock->cfg.ioqueue, &asock_cb, 

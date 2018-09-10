@@ -33,6 +33,9 @@
 #define GUESS_MIN_TTL (4)
 #define GUESS_MAX_TTL (64)
 
+#define MAX_GUESS_SOCKET_COUNT (PORT_GUESS_HOLE_TOTAL_COUNT*4)
+static int g_guess_sock_count = 0;
+
 //set port used, GUESS_MIN_PORT ~ GUESS_MAX_PORT, a port per bit
 PJ_INLINE(void) p2p_guess_set_port_bit(p2p_port_guess* guess, pj_uint16_t port)
 {
@@ -222,14 +225,13 @@ static void on_holes_recv_request(p2p_port_guess* guess,
 			item.data = guess;
 			pj_grp_lock_add_ref(guess->grp_lock); //add reference, release in on_io_thead_recvfrom2
 			schedule_socket_pair(get_p2p_global()->sock_pair, &item);
-
-			break;
 		}
 		else
 		{
 			pj_activesock_close(guess->holes_activesock[i]);
 			guess->holes_activesock[i] = NULL;
-			guess->holes[i] = 0;
+			guess->holes[i] = PJ_INVALID_SOCKET;
+			g_guess_sock_count--;
 		}
 	}
 
@@ -295,12 +297,22 @@ static pj_bool_t on_holes_data_read(pj_activesock_t *asock,
 static void p2p_guess_create_holes(p2p_port_guess* guess, int count)
 {
 	int i;
-	char dummy = '\0';
-	int sended = 0;
-	pj_status_t status;
+	
+	if(guess->too_many_files)
+		return;
+
+	if(g_guess_sock_count >= MAX_GUESS_SOCKET_COUNT)
+	{
+		PJ_LOG(2,("p2p_guess", "p2p_guess_create_holes g_guess_sock_count %d",  g_guess_sock_count));
+		guess->too_many_files = 1;
+		return;
+	}
 
 	for(i=guess->total_holes; i<PORT_GUESS_HOLE_TOTAL_COUNT && count; i++)
 	{
+		char dummy = '\0';
+		int sended = 0;
+		pj_status_t status;
 		pj_activesock_cfg asock_cfg;
 		pj_activesock_cb activesock_cb;
 		void *readbuf[1];
@@ -313,9 +325,39 @@ static void p2p_guess_create_holes(p2p_port_guess* guess, int count)
 		status = pj_sock_socket(pj_AF_INET(), pj_SOCK_DGRAM(),	0, &guess->holes[i]);
 		if (status != PJ_SUCCESS)
 		{
-			PJ_LOG(2,("p2p_guess", "p2p_guess_create_holes failed to pj_sock_socket ,status %d", status));
+			PJ_LOG(2,("p2p_guess", "p2p_guess_create_holes failed to pj_sock_socket ,status %d, total_holes %d", 
+				status, guess->total_holes));
+			if(status == PJ_ERRNO_START_SYS + 24) //too many open files
+			{
+				count = PORT_GUESS_HOLE_INIT_COUNT/2; //half init count
+				if(count >= guess->total_holes)
+					count = guess->total_holes/2;
+				for(i=guess->total_holes-1; i>=0 && count>0; i--,count--) //free some socket handle
+				{
+					if(guess->holes_activesock[i] && guess->holes[i] != PJ_INVALID_SOCKET)
+					{
+						pj_activesock_close(guess->holes_activesock[i]);
+						guess->holes_activesock[i] = NULL;
+						guess->holes[i] = PJ_INVALID_SOCKET;
+						guess->total_holes--;
+						g_guess_sock_count--;
+					}
+				}
+				guess->too_many_files = 1;
+			}
 			break;
 		}
+
+#ifdef ANDROID_BUILD
+		if(guess->holes[i] > MAX_GUESS_SOCKET_COUNT);
+		{
+			pj_sock_close(guess->holes[i]);
+			guess->holes[i] = PJ_INVALID_SOCKET;
+			guess->too_many_files = 1;
+			PJ_LOG(3,("p2p_guess", "p2p_guess_create_holes guess->holes[i] %d", guess->holes[i]));
+			break;
+		}
+#endif
 
 		//make sure this packet can not reach the peer but through the NAT 
 		setsockopt(guess->holes[i], IPPROTO_IP, IP_TTL, (const char*)&ttl, sizeof(ttl));
@@ -330,7 +372,7 @@ static void p2p_guess_create_holes(p2p_port_guess* guess, int count)
 		if (status != PJ_SUCCESS) 
 		{
 			pj_sock_close(guess->holes[i]);
-			guess->holes[i] = 0;
+			guess->holes[i] = PJ_INVALID_SOCKET;
 			PJ_LOG(2,("p2p_guess", "p2p_guess_create_holes failed to pj_activesock_create,status %d", status));
 			break;
 		}
@@ -345,7 +387,7 @@ static void p2p_guess_create_holes(p2p_port_guess* guess, int count)
 
 			pj_activesock_close(guess->holes_activesock[i]);
 			guess->holes_activesock[i] = NULL;
-			guess->holes[i] = 0;
+			guess->holes[i] = PJ_INVALID_SOCKET;
 			
 			PJ_LOG(2,("p2p_guess", "p2p_guess_create_holes failed to sendto,error %d", err));
 			break;
@@ -362,11 +404,12 @@ static void p2p_guess_create_holes(p2p_port_guess* guess, int count)
 
 			pj_activesock_close(guess->holes_activesock[i]);
 			guess->holes_activesock[i] = NULL;
-			guess->holes[i] = 0;
+			guess->holes[i] = PJ_INVALID_SOCKET;
 			break;
 		}
 
 		guess->total_holes++;
+		g_guess_sock_count++;
 	}
 }
 
@@ -473,13 +516,14 @@ static void p2p_guess_close_all_holes(p2p_port_guess* guess)
 	if(guess->p2p_conn->is_initiative)
 	{
 		int i;
-		for(i=0; i<guess->total_holes; i++)
+		for(i=0; i<guess->total_holes && i<PORT_GUESS_HOLE_TOTAL_COUNT; i++)
 		{
-			if(guess->holes_activesock[i])
+			if(guess->holes_activesock[i] && guess->holes[i] != PJ_INVALID_SOCKET)
 			{
 				pj_activesock_close(guess->holes_activesock[i]);
 				guess->holes_activesock[i] = NULL;
-				guess->holes[i] = 0;
+				guess->holes[i] = PJ_INVALID_SOCKET;
+				g_guess_sock_count--;
 			}
 		}
 	}	
@@ -580,6 +624,7 @@ struct p2p_port_guess* p2p_create_port_guess(pj_sock_t sock,
 	int addr_len;
 	char local_addr_info[PJ_INET6_ADDRSTRLEN+10];
 	pj_status_t status;
+	int i;
 
 	PJ_LOG(4,("p2p_guess", "p2p_create_port_guess begin"));
 
@@ -621,6 +666,9 @@ struct p2p_port_guess* p2p_create_port_guess(pj_sock_t sock,
 	guess->port_low = guess->port_high = guess->port_peer;
 
 	pj_sockaddr_print(remote_addr, addr_info, sizeof(addr_info), 3);
+
+	for(i=0; i<PORT_GUESS_HOLE_TOTAL_COUNT; i++)
+		guess->holes[i] = PJ_INVALID_SOCKET;
 
 	t.sec = 0;
 	t.msec = GUESS_TIMER_SPAN;

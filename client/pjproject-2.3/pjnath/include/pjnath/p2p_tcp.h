@@ -1,25 +1,9 @@
 #ifndef __P2P_TCP_H__
 #define __P2P_TCP_H__
 
-#define USE_P2P_TCP 1
-
-#ifdef USE_P2P_TCP
-
 #include <pjlib.h>
 #include <pjlib-util.h>
 #include <pjnath.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-struct sockaddr;
-
-#define P2P_TCP_SEND_BUFFER_COUNT 256
-#define P2P_TCP_RECV_BUFFER_COUNT 256
-#define P2P_TCP_MSS 1360
-
-#define MAX_SACK_COUNT P2P_TCP_SEND_BUFFER_COUNT
 
 #pragma pack(1)
 	/**
@@ -38,8 +22,6 @@ struct sockaddr;
 		pj_uint8_t send_times;
 		pj_uint8_t padding[2];
 	}p2p_tcp_header;
-
-
 #pragma pack()
 
 #pragma pack(4) //for 64 bit system(ios..), 8 byte align, 
@@ -56,6 +38,27 @@ struct sockaddr;
 	}p2p_tcp_snd_data;
 #pragma pack()
 
+#define P2P_TCP_MSS 1360
+#define P2P_TCP_MAX_DATA_LEN (P2P_TCP_MSS-sizeof(p2p_tcp_header))
+#define P2P_TCP_MAX_ACK_LEN ((sizeof(p2p_tcp_header)+MAX_SACK_COUNT*sizeof(pj_uint32_t)*2)/4)
+
+#define USE_P2P_TCP 1
+
+#ifdef USE_P2P_TCP
+
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct sockaddr;
+
+#define P2P_TCP_SEND_BUFFER_COUNT 256
+#define P2P_TCP_RECV_BUFFER_COUNT 256
+
+#define MAX_SACK_COUNT P2P_TCP_SEND_BUFFER_COUNT
+
 	typedef struct p2p_tcp_recved_data
 	{
 		pj_uint16_t data_offset;
@@ -63,15 +66,13 @@ struct sockaddr;
 		struct p2p_tcp_recved_data* next;
 	}p2p_tcp_recved_data;
 
-#define P2P_TCP_MAX_DATA_LEN (P2P_TCP_MSS-sizeof(p2p_tcp_header))
-#define P2P_TCP_MAX_ACK_LEN ((sizeof(p2p_tcp_header)+MAX_SACK_COUNT*sizeof(pj_uint32_t)*2)/4)
 
 	struct p2p_tcp_sock;
 	typedef struct p2p_tcp_cb
 	{
 		void* user_data;
 
-		int (*send)(const struct sockaddr* addr, const char* buffer, int buffer_len, void *user_data);
+		int (*send)(const struct sockaddr* addr, const char* buffer, int buffer_len, void *user_data, pj_uint8_t force_relay);
 		void (*on_close)(void *user_data);
 		void (*on_recved)(void *user_data);
 		void (*on_send)(void *user_data);
@@ -173,6 +174,8 @@ struct sockaddr;
 		pj_grp_lock_t  *grp_lock;
 
 		pj_uint16_t dup_ack_wnd;
+
+		pj_uint8_t force_relay; //force use relay socket
 	}p2p_tcp_sock;
 
 	p2p_tcp_sock* p2p_tcp_create(p2p_tcp_cb* cb, pj_sock_t sock, pj_sockaddr* remote_addr,pj_grp_lock_t  *grp_lock);

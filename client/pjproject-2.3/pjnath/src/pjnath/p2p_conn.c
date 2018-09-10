@@ -22,7 +22,7 @@ pj_bool_t p2p_conn_is_valid(pj_ice_strans_p2p_conn* conn)
 	return PJ_TRUE;
 }
 
-pj_status_t p2p_ice_send_data(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len)
+pj_status_t p2p_ice_send_data(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len, pj_uint8_t force_relay)
 {
 	pj_ice_strans_p2p_conn* conn = (pj_ice_strans_p2p_conn*)user_data;
 	pj_status_t status = PJ_EGONE;
@@ -38,12 +38,19 @@ pj_status_t p2p_ice_send_data(void* user_data, const pj_sockaddr_t* addr, const 
 			pj_ice_strans_sess_is_complete(conn->icest)) 
 		{
 			PJ_LOG(5,("pj_ice_s_p2p_c", "p2p_ice_send_data %p, %d, %d, %d", conn, conn->conn_id, conn->is_initiative, buffer_len));
-			status = pj_ice_strans_sendto(conn->icest, 
-				1, 
-				buffer,
-				buffer_len, 
-				&conn->remote_addr, 
-				pj_sockaddr_get_len(&conn->remote_addr));
+			if(force_relay)
+			{
+				status = pj_ice_strans_relay_send(conn->icest, 1, buffer, buffer_len);
+			}
+			else
+			{
+				status = pj_ice_strans_sendto(conn->icest, 
+					1, 
+					buffer,
+					buffer_len, 
+					&conn->remote_addr, 
+					pj_sockaddr_get_len(&conn->remote_addr));
+			}
 		}
 	}
 	pj_mutex_unlock(conn->send_mutex);

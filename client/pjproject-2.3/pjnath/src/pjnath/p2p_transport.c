@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.5.200"
+#define P2P_VERSION "1.5.310"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -19,7 +19,7 @@
 static void on_ice_data_keep_alive(pj_ice_strans *ice_st, pj_status_t status);
 static void p2p_listener_get_sock_addr(pj_sockaddr_t* addr, void* user_data);
 static pj_status_t p2p_listener_udt_on_accept(void* user_data, void* udt_sock, pj_sockaddr_t* addr);
-static pj_status_t p2p_listener_udt_send(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len);
+static pj_status_t p2p_listener_udt_send(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len, pj_uint8_t force_relay);
 
 
 //return 1 is p2p no relay, 0 is p2p relay
@@ -222,8 +222,8 @@ static void on_ice_data_nego_complete(pj_ice_strans *ice_st,
 				pj_sockaddr_cp(&conn->remote_addr, &valid_check->rcand->addr);
 				pj_sockaddr_print(&conn->remote_addr, addr_info, sizeof(addr_info), 3);
 				PJ_LOG(4,(conn->transport->obj_name, "on_ice_data_nego_complete remote addr %s %d", addr_info, valid_check->rcand->type));
-				if(valid_check->rcand->type < PJ_ICE_CAND_TYPE_RELAYED) //if a client and turn server in LAN, b client in WAN, maybe PJ_ICE_CAND_TYPE_PRFLX
-					pj_ice_close_relayed_socket(ice_st);
+				//if(valid_check->rcand->type < PJ_ICE_CAND_TYPE_RELAYED) //if a client and turn server in LAN, b client in WAN, maybe PJ_ICE_CAND_TYPE_PRFLX
+				//	pj_ice_close_relayed_socket(ice_st);
 				conn->remote_addr_type = valid_check->rcand->type;
 			}
 
@@ -694,7 +694,11 @@ static pj_status_t create_passivity_data_icest(p2p_transport *p2p, void* user_da
 	ice_cfg.turn.alloc_param.user_data = user_data;
 	pj_strdup_with_null(tmp_pool, &ice_cfg.turn.alloc_param.remote_user, remote_user);
 	if(ice_cfg.turn.conn_type == PJ_TURN_TP_UDP && (internal_flag & INTERNAL_FLAG_TCP))
+	{
 		ice_cfg.turn.conn_type = PJ_TURN_TP_TCP;
+	}
+	if(ice_cfg.turn.conn_type == PJ_TURN_TP_TCP)
+		ice_cfg.turn.cfg.so_sndbuf_size = 1024*128; //128K
 
 	/* init the callback */
 	pj_bzero(&icecb, sizeof(icecb));
@@ -1140,7 +1144,7 @@ static void on_timer_event(pj_timer_heap_t *th, pj_timer_entry *e)
 	}
 }
 
-static pj_status_t p2p_listener_udt_send(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len)
+static pj_status_t p2p_listener_udt_send(void* user_data, const pj_sockaddr_t* addr, const char* buffer, size_t buffer_len, pj_uint8_t force_relay)
 {
 	p2p_transport *p2p = (p2p_transport*)user_data;
 	pj_ice_strans_p2p_conn* conn = 0;
@@ -1167,7 +1171,7 @@ static pj_status_t p2p_listener_udt_send(void* user_data, const pj_sockaddr_t* a
 	pj_grp_lock_release(p2p->grp_lock);
 	if(conn)
 	{	
-		status = p2p_ice_send_data(conn, addr, buffer, buffer_len);
+		status = p2p_ice_send_data(conn, addr, buffer, buffer_len, force_relay);
 		pj_grp_lock_dec_ref(conn->grp_lock);
 	}
 	return status;
@@ -1286,7 +1290,7 @@ P2P_DECL(int) p2p_transport_create(p2p_transport_cfg* cfg,
 
 	check_pj_thread();
 
-	PJ_LOG(4,("p2p", "p2p_transport_create begin"));
+	PJ_LOG(4,("p2p", "p2p_transport_create begin,server %s,port %d,use_tcp_connect_srv %d", cfg->server, cfg->port, cfg->use_tcp_connect_srv));
 
 	pool = pj_pool_create(&get_p2p_global()->caching_pool.factory, 
 		"p2p%p", 

@@ -805,6 +805,9 @@ PJ_DECL(pj_status_t) pj_ice_session_report_session_destroyed(pj_turn_session *se
 
 
 PJ_DECL(int) pj_ice_session_server_net_state(pj_turn_session *sess);
+
+PJ_DECL(void) pj_turn_session_on_data_sent(pj_turn_session *sess,pj_ssize_t sent);
+
 PJ_END_DECL
 
 

@@ -191,6 +191,7 @@ struct pj_ice_strans
     pj_bool_t		     cb_called;	/**< Init error callback called?*/
 
 	pj_timer_entry	     reconnect_timer;	/**< reconnect timer.	*///add for p2p
+	pj_bool_t bind_force_relay_channel;
 };
 
 //add for p2p
@@ -325,7 +326,6 @@ PJ_DEF(void) pj_ice_strans_cfg_copy( pj_pool_t *pool,
     pj_stun_auth_cred_dup(pool, &dst->turn.auth_cred,
 			  &src->turn.auth_cred);
 }
-
 
 /*
  * Add or update TURN candidate.
@@ -2556,4 +2556,49 @@ PJ_DECL(int) pj_ice_strans_server_net_state(pj_ice_strans *ice_st)
 	}
 	else
 		return PJ_STUN_MAX_TRANSMIT_COUNT;
+}
+
+PJ_DECL(pj_status_t) pj_ice_strans_relay_send(pj_ice_strans *ice_st,
+											  unsigned comp_id,
+											  const void *data,
+											  pj_size_t data_len)
+{
+	comp_id--;
+
+	if (ice_st && ice_st->comp && ice_st->comp[comp_id]->turn_sock) 
+	{
+		
+		unsigned int i;
+		for(i=0; i<ice_st->ice->rcand_cnt; i++)
+		{
+			pj_ice_sess_cand* cand = &ice_st->ice->rcand[i];
+			if(cand->type == PJ_ICE_CAND_TYPE_RELAYED)
+			{
+				if(!ice_st->bind_force_relay_channel)
+				{
+					pj_status_t status = pj_turn_sock_bind_channel(
+						ice_st->comp[comp_id]->turn_sock,
+						&cand->addr,
+						sizeof(cand->addr));
+					if(status == PJ_SUCCESS)
+					{
+						char addr_info[PJ_INET6_ADDRSTRLEN+10];
+
+						ice_st->bind_force_relay_channel = PJ_TRUE;
+
+						pj_sockaddr_print(&cand->addr, addr_info, sizeof(addr_info), 3);
+						PJ_LOG(3,(ice_st->obj_name, "pj_ice_strans_relay_send remote %s", addr_info));
+					}
+				}			
+
+				return pj_turn_sock_sendto(ice_st->comp[comp_id]->turn_sock, data, data_len,
+					&cand->addr, sizeof(cand->addr));
+			}
+		}
+
+		return PJ_EGONE;
+	}
+	else
+		return PJ_EINVALIDOP;
+
 }

@@ -905,6 +905,11 @@ PJ_DECL(pj_status_t) pj_ice_get_local_internat_addr(pj_ice_strans *ice_st, pj_so
 PJ_DECL(pj_status_t) pj_ice_get_remote_internat_addr(pj_ice_strans *ice_st, pj_sockaddr* remote_addr);
 
 PJ_DECL(int) pj_ice_strans_server_net_state(pj_ice_strans *ice_st);
+
+PJ_DECL(pj_status_t) pj_ice_strans_relay_send(pj_ice_strans *ice_st,
+										  unsigned comp_id,
+										  const void *data,
+										  pj_size_t data_len);
 PJ_END_DECL
 
 

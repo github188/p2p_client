@@ -341,7 +341,7 @@ PJ_INLINE(void) p2p_tcp_sendto(p2p_tcp_sock* sk, const char* buffer, int buffer_
 	}
 	else
 	{
-		sk->cb.send((const struct sockaddr*)&sk->peer_addr,	buffer,	buffer_len,	sk->cb.user_data);
+		sk->cb.send((const struct sockaddr*)&sk->peer_addr,	buffer,	buffer_len,	sk->cb.user_data, sk->force_relay);
 	}
 }
 
@@ -1211,6 +1211,7 @@ static void p2p_tcp_check_heart(pj_timer_heap_t *th, pj_timer_entry *e)
 		if(sk->sock)
 		{
 			sk->sock = 0;
+			sk->force_relay = 1;
 			PJ_LOG(3,("p2p_tcp", "p2p_tcp_check_heart P2P_TCP_SWITCH_SOCK  %p", sk));
 			p2p_tcp_send_switch_sock(sk);
 		}
@@ -1611,8 +1612,9 @@ void p2p_tcp_data_recved(p2p_tcp_sock* sock, const void* buffer, int buffer_len)
 			if(sock->sock)
 			{
 				sock->sock = 0;
-				PJ_LOG(3,("p2p_tcp", "p2p_tcp_data_recved P2P_TCP_SWITCH_SOCK  %p", sock));
+				sock->force_relay = 1;
 			}
+			PJ_LOG(3,("p2p_tcp", "p2p_tcp_data_recved P2P_TCP_SWITCH_SOCK  %p", sock));
 		}
 		break;
 

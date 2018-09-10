@@ -284,12 +284,12 @@ PJ_INLINE(pj_bool_t) udt_obj_is_valid(T* t)
 
 //use ice of pj_ice_strans_p2p_conn, udt socket send data to remote ice 
 template<typename T>
-static int udt_obj_send_cb(const sockaddr* addr, const char* buf, int buf_len, void* user_data)
+static int udt_obj_send_cb(const sockaddr* addr, const char* buf, int buf_len, void* user_data, pj_uint8_t force_relay)
 {
 	T* t = (T*)user_data;
 	if(!udt_obj_is_valid(t))
 		return -1;
-	if( t->udt_cb.udt_send(t->user_data, addr, buf, buf_len) == PJ_SUCCESS)
+	if( t->udt_cb.udt_send(t->user_data, addr, buf, buf_len, force_relay) == PJ_SUCCESS)
 	{
 		return buf_len;
 	}
@@ -1571,8 +1571,8 @@ void p2p_udt_accepter_clear_send_buf(p2p_udt_accepter* accepter)
 		free_p2p_tcp_data(send_data);
 	}
 	accepter->last_send_data = NULL;
-
+#ifdef USE_P2P_TCP
 	p2p_tcp_clear_send_buf(accepter->p2p_tcp);
-
+#endif
 	udt_grp_lock_release(accepter->grp_lock);
 }

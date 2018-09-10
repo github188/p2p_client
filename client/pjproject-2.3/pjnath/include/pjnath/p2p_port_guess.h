@@ -4,15 +4,13 @@
 #define GUESS_MIN_PORT (1024)
 #define GUESS_MAX_PORT (65535)
 
-#define USE_P2P_PORT_GUESS 1
-
-#ifdef USE_P2P_PORT_GUESS
-
-
 #include <pjlib.h>
 #include <pjnath/p2p_tcp.h>
 
 #ifdef USE_P2P_TCP
+
+#define USE_P2P_PORT_GUESS 1
+#ifdef USE_P2P_PORT_GUESS
 
 PJ_BEGIN_DECL
 
@@ -25,7 +23,7 @@ struct p2p_port_guess;
 #define P2P_GUESS_REQUEST (0xB1)  
 #define P2P_GUESS_RESPONSE (0xB2)  
 
-#define PORT_GUESS_HOLE_TOTAL_COUNT (256)
+#define PORT_GUESS_HOLE_TOTAL_COUNT (192)
 #define PORT_GUESS_HOLE_INIT_COUNT (64)
 #define PORT_GUESS_HOLE_ADD_COUNT (4)
 
@@ -79,6 +77,8 @@ typedef struct p2p_port_guess
 	int total_holes;
 	//for receive p2p_tcp data,size is P2P_TCP_MSS
 	char* valid_hole_recv_buf; 
+
+	unsigned char too_many_files;
 
 	unsigned char guess_success;
 }p2p_port_guess;
