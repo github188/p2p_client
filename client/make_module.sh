@@ -80,8 +80,8 @@ function android(){
 	ndk-build
 	cd ../..
 	cp -rf android/libs $OutPath
-	rm -rf android/objs/local/armeabi/objs/ android/objs/local/armeabi-v7a/objs/ android/objs/local/x86/objs/
-	cp -rf android/objs/local/armeabi android/objs/local/armeabi-v7a android/objs/local/x86 $OutPath
+	rm -rf android/obj/local/armeabi/objs/ android/obj/local/armeabi-v7a/objs/ android/obj/local/x86/objs/
+	cp -rf android/obj/local/armeabi android/obj/local/armeabi-v7a android/obj/local/x86 $OutPath
 	cd $OutPath
 	tar zcvf p2p-android-$Version.tar.gz include/ libs/
 	tar zcvf p2p-android-debug-$Version.tar.gz include/ armeabi/ armeabi-v7a/ x86/
