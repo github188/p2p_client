@@ -5,7 +5,7 @@
 #include <pjnath/p2p_tcp.h>
 
 #define THIS_FILE "p2p_transport.c"
-#define P2P_VERSION "1.5.312"
+#define P2P_VERSION "1.5.315"
 
 #define KA_INTERVAL 60
 #define CONN_HASH_TABLE_SIZE 31
@@ -762,7 +762,12 @@ static void on_p2p_connect(struct p2p_conn_arg* arg, pj_status_t status)
 	pj_ice_strans_p2p_conn* conn;
 
 	PJ_LOG(4,("on_p2p_connect", "on_p2p_connect start %p %p %s %d %d", arg, arg->transport, arg->remote_user, arg->conn_id, status));
-	if(!arg || !arg->transport || !arg->transport->grp_lock || !arg->transport->connected)
+	if(!arg 
+		|| !arg->transport 
+		|| arg->transport->destroy_req 
+		|| arg->transport->delay_destroy 
+		|| !arg->transport->grp_lock 
+		|| !arg->transport->connected)
 		return;
 	
 	//the p2p connection maybe destroyed by call p2p_transport_disconnect
@@ -1415,9 +1420,9 @@ P2P_DECL(int) p2p_transport_connect(p2p_transport *transport,
 
 	check_pj_thread();
 
-	if(remote_user == 0 || transport == 0)
+	if(user.ptr == 0 || transport == 0)
 		return PJ_EINVAL;
-	PJ_LOG(3,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect %s %p", transport, remote_user, user_data));
+	PJ_LOG(3,(transport->obj_name, "p2p transport %p pj_p2p_transport_connect %s %p", transport, user.ptr, user_data));
 	if(!transport->connected || transport->destroy_req || transport->delay_destroy)
 	{
 		PJ_LOG(3,(transport->obj_name, "p2p transport %p PJ_EINVALIDOP %d %d %d", transport, transport->connected , transport->destroy_req , transport->delay_destroy));

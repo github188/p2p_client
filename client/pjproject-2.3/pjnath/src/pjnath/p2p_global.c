@@ -10,6 +10,8 @@
 #define THIS_FILE "p2p_global.c"
 #define DELAY_DESTORY_TIME 1
 
+#define DELAY_DESTORY_POOL_TIME (DELAY_DESTORY_TIME*5)
+
 #define MAX_CLIENT_COUNT 4
 
 static p2p_global g_p2p_global;
@@ -138,6 +140,7 @@ static void on_timer_event(pj_timer_heap_t *th, pj_timer_entry *e)
 #define DUMP_TIMES 60
 	PJ_UNUSED_ARG(th);
 
+
 	if(times == DUMP_TIMES)
 	{
 		//PJ_LOG(4, ("on_timer_event", "on_timer_event begin,memory pool %d", g_p2p_global.caching_pool.used_size));
@@ -156,7 +159,7 @@ static void on_timer_event(pj_timer_heap_t *th, pj_timer_entry *e)
 		next = g_p2p_global.delay_destroy_pools.next;
 		while(next != &g_p2p_global.delay_destroy_pools) 
 		{
-			if(now.sec - next->release_time.sec < DELAY_DESTORY_TIME)
+			if(now.sec - next->release_time.sec < DELAY_DESTORY_POOL_TIME)
 				break;
 
 			cur = next;
@@ -437,7 +440,7 @@ P2P_DECL(int) p2p_init(LOG_FUNC log_func)
 	pj_atomic_create(g_p2p_global.pool, pj_rand(), &g_p2p_global.atomic_id);
 
 	/*create io queue thread */	
-#if defined(WIN32) || defined(ANDROID_BUILD) || defined(P2P_IOS)
+#if defined(WIN32) || defined(ANDROID_BUILD) || defined(P2P_IOS) || defined(P2P_MACOS)
 	pj_thread_create(g_p2p_global.pool, "p2p", &p2p_worker_thread, NULL, 0, 0, &g_p2p_global.thread);
 	thread_pro = pj_thread_get_prio_max(g_p2p_global.thread);
 	if(thread_pro <= 0)

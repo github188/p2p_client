@@ -474,6 +474,12 @@ static void sess_shutdown(pj_turn_session *sess,
 	break;
     }
 
+	sess->cb.on_p2p_connect = NULL;
+	sess->cb.on_p2p_disconnect = NULL;
+	sess->cb.on_p2p_exchange_info = NULL;
+	sess->cb.on_recved_p2p_connect = NULL;
+	sess->cb.on_get_local_info = NULL;
+
     if (can_destroy) {
 	/* Schedule destroy */
 	pj_time_val delay = {0, 0};
@@ -1715,6 +1721,8 @@ static void stun_on_request_complete(pj_stun_session *stun,
 	}
 
     } else {
+		if(sess->is_destroying || sess->pending_destroy)
+			return;
 		if(tdata->msg->hdr.type == PJ_STUN_P2P_CONNNECT_REQUEST){ //add for p2p		
 			p2p_conn_arg* arg  = (p2p_conn_arg*)token;
 			if(arg && sess->cb.on_p2p_connect)
